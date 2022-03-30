@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -25,6 +24,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.idea/
 MANIFEST
 
 # PyInstaller
@@ -104,6 +104,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.idea/
 env/
 venv/
 ENV/
@@ -127,3 +128,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# file: ~/.gitignore_global
+.DS_Store
+.idea
+
+# file used only once
+drafts/
+._.
+._*
+._.*
+logs/
