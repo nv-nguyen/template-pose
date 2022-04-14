@@ -1,0 +1,75 @@
+{
+  "root_path": "./root/",
+  "LINEMOD":
+    {
+    "source_url": "https://files.icg.tugraz.at/f/472f5d1108/?dl=1",
+    "local_path": "linemod/LINEMOD",
+    "cad_url": "https://ptak.felk.cvut.cz/6DB/public/bop_datasets/lm_models.zip",
+    "cad_path": "linemod/models"
+    },
+  "occlusionLINEMOD":
+    {
+     "source_url": "https://cloudstore.zih.tu-dresden.de/index.php/s/a65ec05fedd4890ae8ced82dfcf92ad8/download",
+     "local_path": "linemod/occlusionLINEMOD",
+     "cad_url": "https://ptak.felk.cvut.cz/6DB/public/bop_datasets/lm_models.zip",
+     "cad_path": "linemod/models"
+    },
+  "TLESS":
+   {
+    "source_url": "https://ptak.felk.cvut.cz/6DB/public/bop_datasets/",
+    "local_path": "tless",
+    "cad_url": "http://ptak.felk.cvut.cz/darwin/t-less/v2",
+    "cad_reconst_url": "http://ptak.felk.cvut.cz/darwin/t-less/v2/t-less_v2_models_reconst.zip",
+    "cad_path": "tless/models"
+   },
+  "SUN397":
+  {
+    "source_url": "vision.princeton.edu/projects/2010/SUN/SUN397.tar.gz",
+    "local_path": "SUN397/"
+  },
+  "gpu": "0,1,2,3",
+  "disable_output_blender": true,
+  "num_workers": 10,
+  "pretrained_moco":
+  {
+    "source_url": "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
+    "download_local_path": "pretrained/moco_v2_800ep_pretrain.pth.tar",
+    "local_path": "pretrained/moco_v2_800ep_pretrain.pth"
+  },
+  "gdrive":{
+    "linemod": "https://drive.google.com/file/d/1XkQBt01nlfCbFuBsPMfSHlcNIzShn7e7/view?usp=sharing",
+    "TLESS": "https://drive.google.com/file/d/1d2GoswrnvcTlwFi_LWoCiy1uS5OkCiF1/view?usp=sharing",
+    "templates": "https://drive.google.com/file/d/17_2SlfVtu9qYo82zPtqjL_GF99OWJvF5/view?usp=sharing",
+    "dataframes": "https://drive.google.com/file/d/10XVLb-DFIayBu7RZCnsm7NuG0vPZOaTc/view?usp=sharing"
+  },
+  "pretrained_weights":{
+    "LM_baseNetwork_split1": {
+      "source_url": "https://drive.google.com/file/d/1zTrNO64J8iD3qKzkJD7ZBLSKsCpjW0_T/view?usp=sharing",
+      "local_path": "pretrained/LM_baseNetwork_split1.pth"
+    },
+    "LM_baseNetwork_split2": {
+      "source_url": "https://drive.google.com/file/d/1LVV0H4WHYgcHXVX-rLDJdMY1QETMNRWd/view?usp=sharing",
+      "local_path": "pretrained/LM_baseNetwork_split2.pth"
+    },
+    "LM_baseNetwork_split3": {
+      "source_url": "https://drive.google.com/file/d/1pl7YtgUv_cYZY3ooIjumnbXj6vqbLgf7/view?usp=sharing",
+      "local_path": "pretrained/LM_baseNetwork_split3.pth"
+    },
+    "LM_ResNet50_split1": {
+      "source_url": "https://drive.google.com/file/d/1zdjEpit9bGzeZoQmOcL_ZiWf6rd0O7ZR/view?usp=sharing",
+      "local_path": "pretrained/LM_ResNet50_split1.pth"
+    },
+    "LM_ResNet50_split2": {
+      "source_url": "https://drive.google.com/file/d/1mMY1OtBeEVrLtx-6ecOV2EVnbZPMFsIZ/view?usp=sharing",
+      "local_path": "pretrained/LM_ResNet50_split2.pth"
+    },
+    "LM_ResNet50_split3": {
+      "source_url": "https://drive.google.com/file/d/1LLgNGrOVpkk-FHJOmYy2aUV1G1qx9_3l/view?usp=sharing",
+      "local_path": "pretrained/LM_ResNet50_split3.pth"
+    },
+    "TLESS": {
+      "source_url": "https://drive.google.com/file/d/1tNWvNKJfJRWAMfyzsB18PntE7c2tHu6D/view?usp=sharing",
+      "local_path": "pretrained/TLESS.pth"
+    }
+  }
+}
