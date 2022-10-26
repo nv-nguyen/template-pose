@@ -63,5 +63,5 @@ def train(train_data, model, optimizer, warm_up_config, epoch, logger, tb_logger
     if is_master:
         tb_logger.add_scalar_dict_list('loss', [{'train_loss': meter_train_loss.avg,
                                                  'positive similarity': meter_positive_similarity.avg,
-                                                 'negative similarity': meter_negative_similarity.avg}], step=epoch)
+                                                 'negative similarity': meter_negative_similarity.avg}], epoch)
     return meter_train_loss.avg
