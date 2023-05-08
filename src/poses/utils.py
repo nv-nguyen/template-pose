@@ -92,7 +92,7 @@ def get_obj_poses_from_template_level(
             return obj_poses
     elif pose_distribution == "upper":
         cam_poses_path = os.path.join(
-            root_project, f"src/poses/predefined_poses/sphere_poses_level{level}.npy"
+            root_project, f"src/poses/predefined_poses/cam_poses_level{level}.npy"
         )
         cam_poses = np.load(cam_poses_path)
         if return_index:

@@ -5,7 +5,7 @@ defaults:
   - _self_
 
 disable_output: true
-num_workers: 8
+num_workers: 4
 gpus: "0,1,2,3"
 dataset_to_render: all
 custom_blender_path: 

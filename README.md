@@ -34,7 +34,7 @@ We have introduced additional features and updates to the codebase:
 - Parsing with [hydra](https://github.com/facebookresearch/hydra) library, simplifying training_step, testing_step with [pytorch lightning](https://lightning.ai/)
 - Path structure (of pretrained models, dataset) is defined as in our recent project [NOPE](https://github.com/nv-nguyen/nope)
 
-##  Updates (WIP)
+##  TODO
 - Tutorial of training/testing on custom datasets
 - Gradio demo with similarity visualization
 - Release universal pretrained models

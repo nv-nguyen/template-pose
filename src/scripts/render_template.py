@@ -26,7 +26,6 @@ def call_blender_proc(
     obj_pose_path,
     disable_output,
     gpus_devices,
-    custom_blender_path,
 ):
     output_dir = list_output_dir[id_obj]
     cad_path = list_cad_path[id_obj]
@@ -38,14 +37,11 @@ def call_blender_proc(
         os.makedirs(output_dir)
 
     command = f"blenderproc run ./src/poses/blenderproc.py {cad_path} {obj_pose_path} {output_dir} {gpus_devices}"
-    if custom_blender_path is not None:
-        command += f" --custom-blender-path {custom_blender_path}"
     if disable_output:
         command += " true"
     else:
         command += " false"
     os.system(command)
-
 
 @hydra.main(
     version_base=None,
@@ -56,107 +52,59 @@ def render(cfg: DictConfig) -> None:
     OmegaConf.set_struct(cfg, False)
     save_dir = osp.join(osp.dirname(cfg.data.lm.root_dir), "templates")
 
-    # query
-    if cfg.dataset_to_render in ["lm", "all"]:
-        template_poses = get_obj_poses_from_template_level(
-            level=2, pose_distribution="upper"
-        )
-        template_poses[:, :3, 3] *= 0.4  # zoom to object
-        os.makedirs(f"{save_dir}/query", exist_ok=True)
-        obj_pose_path = f"{save_dir}/query/obj_poses.npy"
-        np.save(obj_pose_path, template_poses)
+    template_poses = get_obj_poses_from_template_level(level=2, pose_distribution="all")
+    template_poses[:, :3, 3] *= 0.4  # zoom to object
+    os.makedirs(f"{save_dir}/{cfg.dataset_to_render}", exist_ok=True)
+    obj_pose_path = f"{save_dir}/{cfg.dataset_to_render}/obj_poses.npy"
+    np.save(obj_pose_path, template_poses)
 
-        cad_paths = []
-        output_dirs = []
-        query_names = cfg.data.lm.obj_names.split(", ")
-        for obj in query_names:
-            id_object = query_name_to_real_id[obj]
-            cad_paths.append(
-                os.path.join(
-                    cfg.data.lm.root_dir,
-                    "models/models/obj_{:06d}.ply".format(id_object + 1),
-                )
+    if cfg.dataset_to_render in ["tless"]:
+        cad_dir = os.path.join(
+            cfg.data[cfg.dataset_to_render].root_dir, "models/models_cad"
+        )
+    else:
+        cad_dir = os.path.join(
+            cfg.data[cfg.dataset_to_render].root_dir, "models/models"
+        )
+    cad_paths = []
+    output_dirs = []
+    object_ids = sorted(
+        [int(name[4:][:-4]) for name in os.listdir(cad_dir) if name.endswith(".ply")]
+    )
+    for object_id in object_ids:
+        cad_paths.append(
+            os.path.join(
+                cad_dir,
+                "obj_{:06d}.ply".format(object_id),
             )
-            output_dirs.append(
-                os.path.join(
-                    osp.dirname(cfg.data.lm.root_dir),
-                    "templates/query/obj_{:06d}".format(id_object + 1),
-                )
+        )
+        output_dirs.append(
+            os.path.join(
+                os.path.dirname(cfg.data[cfg.dataset_to_render].root_dir),
+                f"templates/{cfg.dataset_to_render}/obj_{object_id:06d}",
             )
-            os.makedirs(osp.dirname(output_dirs[-1]), exist_ok=True)
+        )
+        os.makedirs(osp.dirname(output_dirs[-1]), exist_ok=True)
 
-        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpus
-        start_time = time.time()
-        pool = multiprocessing.Pool(processes=int(cfg.num_workers))
-        call_blender_proc_with_index = partial(
-            call_blender_proc,
-            list_cad_path=cad_paths,
-            list_output_dir=output_dirs,
-            obj_pose_path=obj_pose_path,
-            disable_output=cfg.disable_output,
-            gpus_devices=cfg.gpus,
-            custom_blender_path=cfg.custom_blender_path,
+    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpus
+    start_time = time.time()
+    pool = multiprocessing.Pool(processes=int(cfg.num_workers))
+    call_blender_proc_with_index = partial(
+        call_blender_proc,
+        list_cad_path=cad_paths,
+        list_output_dir=output_dirs,
+        obj_pose_path=obj_pose_path,
+        disable_output=cfg.disable_output,
+        gpus_devices=cfg.gpus,
+    )
+    mapped_values = list(
+        tqdm(
+            pool.imap_unordered(call_blender_proc_with_index, range(len(object_ids))),
+            total=len(object_ids),
         )
-        mapped_values = list(
-            tqdm(
-                pool.imap_unordered(
-                    call_blender_proc_with_index, range(len(query_names))
-                ),
-                total=len(query_names),
-            )
-        )
-        finish_time = time.time()
-        print("Total time to render templates for query:", finish_time - start_time)
-
-    # TLESS
-    if cfg.dataset_to_render in ["tless", "all"]:
-        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpus
-        start_time = time.time()
-        pool = multiprocessing.Pool(processes=cfg.num_workers)
-        template_poses = get_obj_poses_from_template_level(
-            level=2, pose_distribution="all"
-        )
-        template_poses[:, :3, 3] *= 0.4  # zoom to object
-        os.makedirs(save_dir, exist_ok=True)
-        os.makedirs(f"{save_dir}/tless", exist_ok=True)
-        obj_pose_path = f"{save_dir}/tless/obj_poses.npy"
-        np.save(obj_pose_path, template_poses)
-
-        cad_paths = []
-        output_dirs = []
-        list_obj = range(1, 31)
-        for id_object in list_obj:
-            cad_paths.append(
-                osp.join(
-                    cfg.data.tless_test.root_dir,
-                    f"models/models_cad/obj_{id_object:06d}.ply",
-                )
-            )
-            output_dirs.append(
-                osp.join(
-                    osp.dirname(cfg.data.lm.root_dir),
-                    f"templates/tless/obj_{id_object:06d}",
-                )
-            )
-
-        start_time = time.time()
-        call_blender_proc_with_index = partial(
-            call_blender_proc,
-            list_cad_path=cad_paths,
-            list_output_dir=output_dirs,
-            obj_pose_path=obj_pose_path,
-            disable_output=cfg.disable_output,
-            gpus_devices=cfg.gpus,
-            custom_blender_path=cfg.custom_blender_path,
-        )
-        mapped_values = list(
-            tqdm(
-                pool.imap_unordered(call_blender_proc_with_index, range(len(list_obj))),
-                total=len(list_obj),
-            )
-        )
-        finish_time = time.time()
-        print("Total time to render templates for T-Less:", finish_time - start_time)
+    )
+    finish_time = time.time()
+    print("Total time to render templates for query:", finish_time - start_time)
 
 
 if __name__ == "__main__":

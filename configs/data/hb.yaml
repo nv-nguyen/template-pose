@@ -1,5 +1,5 @@
 dataset_name: HB
-root_dir: ${machine.root_dir}/HB/
+root_dir: ${machine.root_dir}/hb
 source: 
   url: https://bop.felk.cvut.cz/media/data/bop_datasets/hb_val_kinect.zip
   cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/hb_models.zip

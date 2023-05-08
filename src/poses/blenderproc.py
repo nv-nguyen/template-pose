@@ -56,22 +56,15 @@ def render_blender_proc(
     bproc.renderer.enable_distance_output(True)
     # set the amount of samples, which should be used for the color rendering
     bproc.renderer.set_max_amount_of_samples(100)
-    black_img = Image.new("RGB", (img_size[1], img_size[0]))
+    bproc.renderer.set_output_format(enable_transparency=True)
     for idx_frame, obj_pose in enumerate(obj_poses):
         obj.set_local2world_mat(obj_pose)
         data = bproc.renderer.render()
         data.update(
             bproc.renderer.render_segmap(map_by="class", use_alpha_channel=True)
         )
-        # # Map distance to depth
-        depth = bproc.postprocessing.dist2depth(data["distance"])[0]
-        mask = np.uint8((depth < 1000) * 255)
-        mask = Image.fromarray(mask)
-        mask.save(os.path.join(output_dir, "{:06d}_mask.png".format(idx_frame)))
-
-        rgb = Image.fromarray(np.uint8(data["colors"][0]))
-        img = Image.composite(rgb, black_img, mask)
-        img.save(os.path.join(output_dir, "{:06d}.png".format(idx_frame)))
+        rgb = Image.fromarray(np.uint8(data["colors"][0])).convert("RGBA")
+        rgb.save(os.path.join(output_dir, "{:06d}.png".format(idx_frame)))
         # bpy.ops.wm.save_as_mainfile(
         #     filepath="./blender_file.blend"
         # )

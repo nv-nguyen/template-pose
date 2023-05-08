@@ -1,5 +1,5 @@
 dataset_name: HOPE
-root_dir: ${machine.root_dir}/hope/
+root_dir: ${machine.root_dir}/hope
 source: 
   url: https://bop.felk.cvut.cz/media/data/bop_datasets/hope_val.zip
   cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/hope_models.zip

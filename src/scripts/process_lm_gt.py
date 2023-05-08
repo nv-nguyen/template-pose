@@ -43,7 +43,7 @@ def process_query_with_idx(
 @hydra.main(
     version_base=None,
     config_path="../../configs",
-    config_name="process_data",
+    config_name="render",
 )
 def process_gt(cfg: DictConfig) -> None:
     OmegaConf.set_struct(cfg, False)
@@ -52,7 +52,7 @@ def process_gt(cfg: DictConfig) -> None:
     query_names = cfg.data.lm.obj_names.split(", ")
     occlusion_query_names = cfg.data.olm.obj_names.split(", ")
     # process query
-    dataset_pose_path = osp.join(cfg.data.lm.root_dir, "opencv_pose", "query")
+    dataset_pose_path = osp.join(cfg.data.lm.root_dir, "opencv_pose", "LINEMOD")
     if not osp.exists(dataset_pose_path):
         extract_openCV_pose(cfg.data.lm.root_dir)
     cfg.data.lm.test_dir = osp.join(cfg.data.lm.root_dir, "test")
@@ -82,9 +82,11 @@ def process_gt(cfg: DictConfig) -> None:
     logging.info(f"Total time for query: {finish_time - start_time}")
 
     # process occlusion query
-    dataset_pose_path = osp.join(cfg.data.lm.root_dir, "opencv_pose", "occlusionquery")
+    dataset_pose_path = osp.join(
+        cfg.data.lm.root_dir, "opencv_pose", "occlusionLINEMOD"
+    )
     start_time = time.time()
-    os.makedirs(osp.join(cfg.data.olm.root_dir, "test"))
+    os.makedirs(osp.join(cfg.data.olm.root_dir, "test"), exist_ok=True)
     process_occlusionLM(
         cfg.data.olm.root_dir,
         dataset_pose_path,

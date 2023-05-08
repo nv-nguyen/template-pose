@@ -1,11 +1,11 @@
 # Additional 
 configs/user/nguyen.yaml
 .hydra/
+outputs/
 bop_viz_kit/
 huggingface/
 slurm_logs/
 slurm_utils/
-outputs/
 tmp/
 .empty/
 # Byte-compiled / optimized / DLL files
