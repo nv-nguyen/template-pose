@@ -1,3 +1,13 @@
+# Additional 
+configs/user/nguyen.yaml
+.hydra/
+bop_viz_kit/
+huggingface/
+slurm_logs/
+slurm_utils/
+outputs/
+tmp/
+.empty/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

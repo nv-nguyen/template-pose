@@ -1,0 +1,7 @@
+defaults:
+  - /data/lm@lm
+  - /data/olm@olm
+  - /data/tless_train@tless_train
+  - /data/tless_test@tless_test
+  - /data/hb@hb # additional training sets to have universial model
+  - /data/hope@hope # additional training sets to have universial model

@@ -1,0 +1,9 @@
+dataset_name: TLESS_test
+root_dir: ${machine.root_dir}/tless/test
+source: 
+  url: https://bop.felk.cvut.cz/media/data/bop_datasets/tless_test_primesense_all.zip
+  cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/tless_models.zip
+  http: True
+  unzip_mode: unzip
+  processing:
+

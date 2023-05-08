@@ -1,0 +1,11 @@
+defaults:
+  - user: default
+  - machine: local
+  - data: all
+  - _self_
+
+disable_output: true
+num_workers: 8
+gpus: "0,1,2,3"
+dataset_to_render: all
+custom_blender_path: 
