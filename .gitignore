@@ -2,6 +2,7 @@
 configs/user/nguyen.yaml
 .hydra/
 outputs/
+None/
 bop_viz_kit/
 huggingface/
 slurm_logs/

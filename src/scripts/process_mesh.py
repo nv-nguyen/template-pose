@@ -70,7 +70,6 @@ def render(cfg: DictConfig) -> None:
     # convert mesh format of ycbv or hope from textured CAD to vertex color CAD
     for dataset_name in ["hope", "ruapc"]:
         cad_dir = os.path.join(cfg.data[dataset_name].root_dir, "models/models")
-        print(cad_dir)
         cad_names = sorted(
             [name for name in os.listdir(cad_dir) if name.endswith(".ply") and not name.endswith("_old.ply")]
         )

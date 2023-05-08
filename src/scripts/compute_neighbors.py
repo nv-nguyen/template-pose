@@ -34,7 +34,11 @@ def compute_neighbors(cfg: DictConfig) -> None:
     OmegaConf.set_struct(cfg, False)
     for data_cfg in cfg.data.values():
         logging.info(f"Compute neighbors template for {data_cfg.dataset_name}")
-        splits = os.listdir(data_cfg.root_dir)
+        splits = [
+            split
+            for split in os.listdir(data_cfg.root_dir)
+            if os.path.isdir(os.path.join(data_cfg.root_dir, split))
+        ]
         splits = [
             split
             for split in splits
@@ -42,6 +46,7 @@ def compute_neighbors(cfg: DictConfig) -> None:
             or split.startswith("val")
             or split.startswith("test")
         ]
+
         for split in splits:
             start_time = time.time()
             finder = NearestTemplateFinder(

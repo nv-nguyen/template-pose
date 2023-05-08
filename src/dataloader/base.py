@@ -24,6 +24,7 @@ import cv2
 import trimesh
 from src.utils.visualization_utils import render_pts_to_image
 from src.poses.utils import crop_frame
+
 # set level logging
 logging.basicConfig(level=logging.INFO)
 
@@ -64,8 +65,7 @@ class BaseBOP(Dataset):
                     if os.path.isdir(osp.join(self.root_dir, scene))
                 ]
             )
-            print(osp.join(self.root_dir, split[0]))
-        logging.info(f"Found {self.list_scenes} scenes")
+        logging.info(f"Found {len(self.list_scenes)} scenes")
 
     def load_scene(self, path, use_visible_mask=True):
         # Load rgb and mask images
@@ -223,7 +223,13 @@ class BaseBOP(Dataset):
 
     def load_cad(self, cad_name="models"):
         cad_dir = f"{self.root_dir}/models/{cad_name}"
-        cad_names = sorted([x for x in os.listdir(cad_dir) if x.endswith(".ply")])
+        cad_names = sorted(
+            [
+                x
+                for x in os.listdir(cad_dir)
+                if x.endswith(".ply") and not x.endswith("_old.ply")
+            ]
+        )
         models_info = load_json(osp.join(cad_dir, "models_info.json"))
         self.cads = {}
         for cad_name in cad_names:
@@ -299,12 +305,38 @@ class BaseBOP(Dataset):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    root_dir = "/home/nguyen/Documents/datasets/templateV2/o-lm/"
-    reset_metaData = True
-    dataset = BaseBOP(root_dir)
-    dataset.load_list_scene("test")
-    dataset.load_metaData(reset_metaData=reset_metaData)
-    dataset.load_cad()
-    for scene_path in dataset.list_scenes:
-        scene_id = scene_path.split("/")[-1]
-        dataset.check_scene(scene_id, "./tmp/")
+    root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose"
+    dataset_names = ["hb", "hope", "icbin", "lm", "o-lm", "ruapc", "tudl"]
+    # tless is special
+    for dataset_name, split in zip(
+        ["tless/test", "tless/train"], ["test_primesense", "train_primesense"]
+    ):
+        dataset = BaseBOP(os.path.join(root_dir, dataset_name), split)
+        dataset.load_list_scene(split=split)
+        dataset.load_metaData(reset_metaData=True)
+        dataset.load_cad(cad_name="models_cad")
+        for scene_path in dataset.list_scenes:
+            scene_id = scene_path.split("/")[-1]
+            dataset.check_scene(scene_id, f"./tmp/{dataset_name}")
+
+    for dataset_name in tqdm(dataset_names):
+        splits = [
+            split
+            for split in os.listdir(os.path.join(root_dir, dataset_name))
+            if os.path.isdir(os.path.join(root_dir, dataset_name, split))
+        ]
+        splits = [
+            split
+            for split in splits
+            if split.startswith("train")
+            or split.startswith("val")
+            or split.startswith("test")
+        ]
+        for split in splits:
+            dataset = BaseBOP(os.path.join(root_dir, dataset_name), split)
+            dataset.load_list_scene(split=split)
+            dataset.load_metaData(reset_metaData=True)
+            dataset.load_cad()
+            for scene_path in dataset.list_scenes:
+                scene_id = scene_path.split("/")[-1]
+                dataset.check_scene(scene_id, f"./tmp/{dataset_name}")
