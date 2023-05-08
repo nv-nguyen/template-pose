@@ -30,6 +30,7 @@ If you like this project, check out related works from our group:
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
+- Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [Linemod, HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/media/data/bop_datasets/icmi_train.zip)
 - Adding code to generate poses (OpenCV coordinate) from icosahedron with Blender
 - Parsing with [hydra](https://github.com/facebookresearch/hydra) library, simplifying training_step, testing_step with [pytorch lightning](https://lightning.ai/)
 - Path structure (of pretrained models, dataset) is defined as in our recent project [NOPE](https://github.com/nv-nguyen/nope)
@@ -79,14 +80,18 @@ First, create template poses from icosahedron:
 ```
 blenderproc run src/poses/create_poses.py
 ```
-There are two options for next steps:
+Next, download and process BOP datasets
+```
+./src/scripts/download_and_process_datasets.sh
+```
+There are two options for final step (rendering synthetic templates from CAD models):
 #### Option 1: Download preprocessed dataset:
 ```
-./src/scripts/download_preprocessed_data.sh
+TODO
 ```
 #### Option 2: Create/download dataset from scratch
 ```
-./src/scripts/download_and_process_from_scratch.sh
+./src/scripts/render_all.sh
 ```
 </details>
  

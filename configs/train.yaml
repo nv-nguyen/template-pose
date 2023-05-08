@@ -1,0 +1,24 @@
+# Composing nested config with default
+defaults:
+  - user: default
+  - machine: local
+  - callback: base 
+  - model: resnet50
+  - data: all
+  - _self_
+
+save_dir: ${machine.root_dir}/results/${name_exp}
+name_exp: train
+use_pretrained: True
+train_datasets:
+  - tless_train
+  - hb 
+  - hope 
+  - icmi 
+  - icbin
+  - ruapc
+  - tudl
+test_datasets:
+  - lm 
+  - olm
+  - tless_test

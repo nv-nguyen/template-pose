@@ -3,5 +3,9 @@ defaults:
   - /data/olm@olm
   - /data/tless_train@tless_train
   - /data/tless_test@tless_test
-  - /data/hb@hb # additional training sets to have universial model
-  - /data/hope@hope # additional training sets to have universial model
+  - /data/hb@hb # additional training sets wrt paper to have universial model
+  - /data/hope@hope # additional training sets wrt paper to have universial model
+  - /data/icmi@icmi # additional training sets wrt paper to have universial model
+  - /data/icbin@icbin # additional training sets wrt paper to have universial model
+  - /data/ruapc@ruapc # additional training sets wrt paper to have universial model
+  - /data/tudl@tudl # additional training sets wrt paper to have universial model

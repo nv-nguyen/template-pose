@@ -1,4 +1,4 @@
-dataset_name: occlusionquery
+dataset_name: occlusionLINEMOD
 root_dir: ${machine.root_dir}/o-lm
 obj_names: "ape, can, cat, driller, duck, eggbox, glue, holepuncher"
 source:

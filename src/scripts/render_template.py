@@ -43,7 +43,6 @@ def call_blender_proc(
         command += " false"
     os.system(command)
 
-
 @hydra.main(
     version_base=None,
     config_path="../../configs",
@@ -68,7 +67,7 @@ def render(cfg: DictConfig) -> None:
     cad_paths = []
     output_dirs = []
     object_ids = sorted(
-        [int(name[4:][:-4]) for name in os.listdir(cad_dir) if name.endswith(".ply")]
+        [int(name[4:][:-4]) for name in os.listdir(cad_dir) if name.endswith(".ply") and not name.endswith("old.ply")]
     )
     for object_id in object_ids:
         cad_paths.append(
@@ -77,6 +76,11 @@ def render(cfg: DictConfig) -> None:
                 "obj_{:06d}.ply".format(object_id),
             )
         )
+        # hope and ycbv cad format is different which make the render is always black
+        # use obj format instead (make sure you have used python -m src.scripts.process_mesh to convert ply to obj)
+        # if cfg.dataset_to_render in ["hope", "ycbv"]:
+        #     cad_paths[-1] = cad_paths[-1].replace(".ply", ".obj")
+        
         output_dirs.append(
             os.path.join(
                 save_dir,

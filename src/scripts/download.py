@@ -57,13 +57,12 @@ def run_download(config: DictConfig) -> None:
 @hydra.main(
     version_base=None,
     config_path="../../configs",
-    config_name="download",
+    config_name="render",
 )
 def download(cfg: DictConfig) -> None:
     OmegaConf.set_struct(cfg, False)
     for data_cfg in cfg.data.values():
         logging.info(f"Downloading {data_cfg.dataset_name}")
-        print(data_cfg)
         run_download(data_cfg)
         logging.info(f"---" * 100)
 

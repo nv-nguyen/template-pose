@@ -1,5 +1,0 @@
-defaults:
-  - user: default
-  - machine: local
-  - data: all
-  - _self_

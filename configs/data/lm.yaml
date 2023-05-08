@@ -1,4 +1,4 @@
-dataset_name: query
+dataset_name: LINEMOD
 root_dir: ${machine.root_dir}/lm
 obj_names: "ape, benchvise, cam, can, cat, driller, duck, eggbox, glue, holepuncher, iron, lamp, phone"
 source:
