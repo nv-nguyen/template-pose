@@ -43,6 +43,7 @@ def call_blender_proc(
         command += " false"
     os.system(command)
 
+
 @hydra.main(
     version_base=None,
     config_path="../../configs",
@@ -59,9 +60,7 @@ def render(cfg: DictConfig) -> None:
     np.save(obj_pose_path, template_poses)
 
     if cfg.dataset_to_render in ["tless"]:
-        cad_dir = os.path.join(
-            cfg.data[cfg.dataset_to_render].root_dir, "models/models_cad"
-        )
+        cad_dir = os.path.join(cfg.data["tless_test"].root_dir, "models/models_cad")
     else:
         cad_dir = os.path.join(
             cfg.data[cfg.dataset_to_render].root_dir, "models/models"
@@ -80,8 +79,8 @@ def render(cfg: DictConfig) -> None:
         )
         output_dirs.append(
             os.path.join(
-                os.path.dirname(cfg.data[cfg.dataset_to_render].root_dir),
-                f"templates/{cfg.dataset_to_render}/obj_{object_id:06d}",
+                save_dir,
+                f"{cfg.dataset_to_render}/obj_{object_id:06d}",
             )
         )
         os.makedirs(osp.dirname(output_dirs[-1]), exist_ok=True)
