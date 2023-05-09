@@ -24,6 +24,7 @@ from src.scripts.render_template import call_blender_proc
     config_name="render",
 )
 def render(cfg: DictConfig) -> None:
+    
     OmegaConf.set_struct(cfg, False)
     save_dir = osp.join(osp.dirname(cfg.data.lm.root_dir), "templates")
     dataset_name = cfg.dataset_to_render
@@ -32,6 +33,7 @@ def render(cfg: DictConfig) -> None:
     else:
         data_cfg = cfg.data[dataset_name]
     obj_pose_path = f"{save_dir}/{dataset_name}/obj_poses.npy"
+    
     logging.info(f"Checking {data_cfg.dataset_name} ...")
     if dataset_name in ["tless"]:
         cad_dir = os.path.join(data_cfg.root_dir, "models/models_cad")
@@ -51,7 +53,7 @@ def render(cfg: DictConfig) -> None:
             "obj_{:06d}.ply".format(object_id),
         )
         template_dir = os.path.join(save_dir, f"{dataset_name}/obj_{object_id:06d}")
-        num_templates = len(os.listdir(template_dir))
+        num_templates = len([file for file in os.listdir(template_dir) if file.endswith(".png")])
         if num_templates != 642:
             logging.info(
                 f"Dataset {data_cfg.dataset_name}, obj {object_id} failed, found only {num_templates}"

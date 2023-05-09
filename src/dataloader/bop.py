@@ -147,11 +147,9 @@ class BOPDataset(BaseBOP):
                 return rgb.convert("RGB")
 
     def __getitem__(self, idx):
-        # real image
         query = self.load_image(idx, type_img="real")
         query = self.rgb_transform(query)
         if not self.isTesting:
-            # synth image
             template, template_mask = self.load_image(idx, type_img="synth")
             template = self.rgb_transform(template)
             template_mask = self.mask_transform(template_mask)
@@ -164,8 +162,17 @@ class BOPDataset(BaseBOP):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose"
-    dataset_names = ["hb", "hope", "icmi", "ruapc", "tudl"]
+    from torch.utils.data import DataLoader
+
+    root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose-released/datasets"
+    dataset_names = [
+        "tudl",
+        "hb",
+        "hope",
+        "icmi",
+        "icbin",
+        "ruapc",
+    ]
 
     # tless is special
     # for dataset_name, split in zip(["tless/train"], ["train_primesense"]):
@@ -194,7 +201,11 @@ if __name__ == "__main__":
             for split in os.listdir(os.path.join(root_dir, dataset_name))
             if os.path.isdir(os.path.join(root_dir, dataset_name, split))
         ]
-        splits = [split for split in splits if split.startswith("train")]
+        splits = [
+            split
+            for split in splits
+            if split.startswith("train") or split.startswith("val")
+        ]
         for split in splits:
             dataset = BOPDataset(
                 root_dir=os.path.join(root_dir, dataset_name),
@@ -203,17 +214,26 @@ if __name__ == "__main__":
                 obj_ids=None,
                 img_size=256,
                 cropping_with_bbox=True,
-                reset_metaData=False,
-                use_augmentation=True
+                reset_metaData=True,
+                use_augmentation=True,
             )
-            for idx in range(len(dataset)):
-                sample = dataset[idx]
-                query = transform_inverse(sample["query"])
-                template = transform_inverse(sample["template"])
-                query = query.permute(1, 2, 0).numpy()
-                query = Image.fromarray(np.uint8(query * 255))
-                query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
-                template = template.permute(1, 2, 0).numpy()
-                template = Image.fromarray(np.uint8(template * 255))
-                template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
-                break
+            train_data = DataLoader(
+                dataset, batch_size=16, shuffle=False, num_workers=10
+            )
+            train_size, train_loader = len(train_data), iter(train_data)
+            for idx in tqdm(range(train_size)):
+                batch = next(train_loader)
+                if idx >= 500:
+                    break
+            logging.info(f"{dataset_name} is running correctly!")
+            # for idx in range(len(dataset)):
+            # sample = dataset[idx]
+            # query = transform_inverse(sample["query"])
+            # template = transform_inverse(sample["template"])
+            # query = query.permute(1, 2, 0).numpy()
+            # query = Image.fromarray(np.uint8(query * 255))
+            # query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
+            # template = template.permute(1, 2, 0).numpy()
+            # template = Image.fromarray(np.uint8(template * 255))
+            # template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
+            # break

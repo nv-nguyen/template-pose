@@ -41,13 +41,17 @@ $ROOT_DIR
     ├── datasets
         ├── linemod 
             ├── models
-            ├── opencv_pose
             ├── test
         ├── tless
+        ├── ruapc 
+        ├── ...
         ├── templates	
     ├── pretrained
+        ├── moco_v2_800ep_pretrain.pth
     ├── results
         ├── experiment1
+            ├── wandb
+            ├── checkpoint
         ├── experiment2
 ```
 
@@ -79,22 +83,59 @@ Next, download and process BOP datasets
 ```
 ./src/scripts/download_and_process_datasets.sh
 ```
-There are two options for final step (rendering synthetic templates from CAD models):
-#### Option 1: Download preprocessed dataset:
+There are two options for the final step (rendering synthetic templates from CAD models):
+
+#### Option 1: Download pre-rendered synthetic templates:
 ```
-TODO
+python -m src.scripts.download_prerendered_templates
 ```
-#### Option 2: Create/download dataset from scratch
+Optional: This pre-rendered template set can be manually downloaded from [here](https://drive.google.com/drive/folders/1p9eJ8dTxR3rVinvaFxPw5N_3IGSlS2_E?usp=sharing) (12GB).
+#### Option 2: Rendering synthetic templates from scratch
 ```
 ./src/scripts/render_all.sh
 ```
-</details>
- 
- ##  Launch a training 
+
+It is important to verify that all the datasets are correctly downloaded and processed. For example, by counting the number of images of each folder:
 
 <details><summary>Click to expand</summary>
 
-### 1. Mixing all BOP datasets except LINEMOD and T-LESS (only objects 19-30)
+```
+for dir in $ROOT_DIR/datasets/*     
+do
+    echo ${dir}
+    find ${dir} -name "*.png"|wc -l     
+done
+```
+
+If everything is fine, here are the number of images that you should get:
+
+```bash
+├── $ROOT_DIR/datasets
+    ├── hb # 55080
+    ├── hope # 1968
+    ├── icbin # 19016
+    ├── icmi # 31512
+    ├── lm # 49822
+    ├── olm # 4856	
+    ├── ruapc #	143486
+    ├── tless # 309600
+    ├── tudl # 153152
+    ├── templates (12GB) # 84102
+```
+</details>
+
+</details>
+
+
+ ##  Launch a training  :rocket:
+
+<details><summary>Click to expand</summary>
+### 0. (Optional) We use pretrained weight from MoCo v2. You can download it from [here]() or run:
+```
+python -m src.scripts.download_moco_weights
+```
+If you don't want to use pretrained weights, you can remove the path in [this line](https://drive.google.com/drive/folders/1p9eJ8dTxR3rVinvaFxPw5N_3IGSlS2_E?usp=sharing).
+### 1. Training on all BOP datasets except LINEMOD and T-LESS (only objects 19-30)
 ```
 python train.py name_exp=train_all
 ```

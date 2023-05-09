@@ -9,3 +9,6 @@ num_workers: 4
 gpus: "0,1,2,3"
 dataset_to_render: all
 custom_blender_path: 
+
+url_preRendered_templates: https://drive.google.com/file/d/1Mm4o6quphpI4udCifNhkskHiBZF8qIt4/view?usp=sharing
+url_moco_weights:  https://drive.google.com/file/d/1DwlMVdj7rPh3TZ2QfKDU4t4460gofm7i/view?usp=share_link # TODO: should not put it here 

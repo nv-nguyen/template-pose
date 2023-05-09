@@ -1,5 +1,5 @@
 dataset_name: TUD-L
-root_dir: ${machine.root_dir}/tudl
+root_dir: ${machine.root_dir}/datasets/tudl
 source: 
   url: https://bop.felk.cvut.cz/media/data/bop_datasets/tudl_train_real.zip
   cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/tudl_models.zip
@@ -9,8 +9,8 @@ source:
 
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
-  root_dir: ${machine.root_dir}/tudl
-  template_dir: ${machine.root_dir}/templates/tudl
+  root_dir: ${machine.root_dir}/datasets/tudl
+  template_dir: ${machine.root_dir}/datasets/templates/tudl
   obj_ids:
   reset_metaData: True
   img_size: 256

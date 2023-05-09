@@ -1,5 +1,5 @@
 dataset_name: HOPE
-root_dir: ${machine.root_dir}/hope
+root_dir: ${machine.root_dir}/datasets/hope
 source: 
   url: https://bop.felk.cvut.cz/media/data/bop_datasets/hope_val.zip
   cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/hope_models.zip
@@ -9,8 +9,8 @@ source:
 
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
-  root_dir: ${machine.root_dir}/hope
-  template_dir: ${machine.root_dir}/templates/hope
+  root_dir: ${machine.root_dir}/datasets/hope
+  template_dir: ${machine.root_dir}/datasets/templates/hope
   obj_ids:
   reset_metaData: True
   img_size: 256

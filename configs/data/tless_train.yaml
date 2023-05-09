@@ -1,5 +1,5 @@
 dataset_name: TLESS_train
-root_dir: ${machine.root_dir}/tless/train
+root_dir: ${machine.root_dir}/datasets/tless/train
 source: 
   url: https://bop.felk.cvut.cz/media/data/bop_datasets/tless_train_primesense.zip
   cad_url: https://bop.felk.cvut.cz/media/data/bop_datasets/tless_models.zip
@@ -9,8 +9,8 @@ source:
 
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
-  root_dir: ${machine.root_dir}/tless/train
-  template_dir: ${machine.root_dir}/templates/tless
+  root_dir: ${machine.root_dir}/datasets/tless/train
+  template_dir: ${machine.root_dir}/datasets/templates/tless
   obj_ids:
   reset_metaData: True
   img_size: 256

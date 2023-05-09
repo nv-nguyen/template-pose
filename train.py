@@ -35,8 +35,12 @@ def train(cfg: DictConfig):
     logging.info(f"Wandb logger initialized at {cfg.save_dir}")
 
     if cfg.machine.name == "slurm":
-        cfg.machine.trainer.devices = int(os.environ["SLURM_GPUS_ON_NODE"])
-        cfg.machine.trainer.num_nodes = int(os.environ["SLURM_NNODES"])
+        num_gpus = int(os.environ["SLURM_GPUS_ON_NODE"])
+        num_nodes = int(os.environ["SLURM_NNODES"])
+        cfg.machine.trainer.devices = num_gpus
+        cfg.machine.trainer.num_nodes = num_nodes
+        logging.info(f"Slurm config: {num_gpus} gpus,  {num_nodes} nodes")
+        
     trainer = instantiate(cfg.machine.trainer)
     logging.info(f"Trainer initialized")
 
@@ -55,7 +59,7 @@ def train(cfg: DictConfig):
         config_dataloader = cfg.data[data_name].dataloader
         splits = [
             split
-            for split in os.listdir(os.path.join(config_dataloader.root_dir))
+            for split in os.listdir(config_dataloader.root_dir)
             if os.path.isdir(os.path.join(config_dataloader.root_dir, split))
         ]
         splits = [
