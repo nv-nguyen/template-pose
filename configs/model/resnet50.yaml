@@ -1,7 +1,7 @@
 modelname: FeatureExtractor
 _target_: src.model.network.FeatureExtractor
 
-descriptor_size: 16
+descriptor_size: 8
 threshold: 0.2
 pretrained_weight: ${machine.root_dir}/pretrained/moco_v2_800ep_pretrain.pth
 

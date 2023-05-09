@@ -70,7 +70,7 @@ conda env create -f environment.yml
 conda activate template
 ```
 
-### 2. Datasets (from scratch) :smiley_cat: :electric_plug:
+### 2. Datasets
 First, create template poses from icosahedron:
 ```
 blenderproc run src/poses/create_poses.py
@@ -90,6 +90,24 @@ TODO
 ```
 </details>
  
+ ##  Launch a training 
+
+<details><summary>Click to expand</summary>
+
+### 1. Mixing all BOP datasets except LINEMOD and T-LESS (only objects 19-30)
+```
+python train.py name_exp=train_all
+```
+
+The parsing is done with Hydra library. You can override anything in the configuration by passing arguments. For example:
+```
+# experiment 1: change batch_size, using data augmentation, update name_exp
+python train.py machine.batch_size=2 use_augmentation=True name_exp=train_augmentation
+
+# experiment 2: change batch_size, using data augmentation, update name_exp, update_lr
+python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_exp=train_augmentation_lr0.001
+```
+</details>
 
 ## Acknowledgement
 

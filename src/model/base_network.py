@@ -213,10 +213,11 @@ class BaseFeatureExtractor(pl.LightningModule):
                 self.transform_inverse(query),
                 self.transform_inverse(template),
                 mask_vis,
-            ]
+            ],
+            adding_margin=False,
         )
         save_path = os.path.join(
-            self.log_dir, f"{self.global_step}_{self.global_rank}.png"
+            self.log_dir, f"step{self.global_step}_rank{self.global_rank}.png"
         )
         save_image(
             vis_img.float(),
@@ -232,14 +233,25 @@ class BaseFeatureExtractor(pl.LightningModule):
         elif self.trainer.global_step == self.warm_up_steps:
             logging.info(f"Finished warm up, setting lr to {self.lr}")
 
-        query = batch["query"]
-        template = batch["template"]
-        mask = batch["template_mask"]
-        if self.global_step % self.log_interval == 0 and self.global_rank == 0:
-            self.visualize_batch(batch, "train")
-        # compute positive and negative similarity
-        feature_query = self.forward(query)
-        feature_template = self.forward(template)
+        feature_query, feature_template, mask = [], [], []
+        for dataset_name in batch:
+            query_i = batch[dataset_name]["query"]
+            template_i = batch[dataset_name]["template"]
+            mask_i = batch[dataset_name]["template_mask"]
+
+            feature_query_i = self.forward(query_i)
+            feature_template_i = self.forward(template_i)
+
+            feature_query.append(feature_query_i)
+            feature_template.append(feature_template_i)
+            mask.append(mask_i)
+
+            if self.global_step % self.log_interval == 0 and self.global_rank == 0:
+                self.visualize_batch(batch[dataset_name], f"train_{dataset_name}")
+        # collect from all datasets
+        feature_query = torch.cat(feature_query, dim=0)
+        feature_template = torch.cat(feature_template, dim=0)
+        mask = torch.cat(mask, dim=0)
 
         # collect data from all devices
         if self.use_all_gather:

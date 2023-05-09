@@ -10,6 +10,7 @@ defaults:
 save_dir: ${machine.root_dir}/results/${name_exp}
 name_exp: train
 use_pretrained: True
+use_augmentation: False
 train_datasets:
   - tless_train
   - hb 

@@ -44,15 +44,31 @@ def train(cfg: DictConfig):
     logging.info(f"Model '{cfg.model.modelname}' loaded")
     if cfg.model.pretrained_weight is not None:
         load_checkpoint(
-            model,
+            model.backbone,
             cfg.model.pretrained_weight,
-            prefix="backbone.",
-            state_dict_key="model",
+            prefix="",
+            checkpoint_key="model",
         )
 
     train_dataloaders = {}
     for data_name in cfg.train_datasets:
-        config_dataloader = cfg.data[data_name]
+        config_dataloader = cfg.data[data_name].dataloader
+        splits = [
+            split
+            for split in os.listdir(os.path.join(config_dataloader.root_dir))
+            if os.path.isdir(os.path.join(config_dataloader.root_dir, split))
+        ]
+        splits = [
+            split
+            for split in splits
+            if split.startswith("train")
+            or split.startswith("val")
+        ]
+        assert len(splits) == 1, f"Found {splits} train splits for {data_name}"
+        split = splits[0]
+        config_dataloader.split = split
+        config_dataloader.reset_metaData = False
+        config_dataloader.use_augmentation = cfg.use_augmentation
         train_dataloader = DataLoader(
             instantiate(config_dataloader),
             batch_size=cfg.machine.batch_size,
@@ -64,30 +80,28 @@ def train(cfg: DictConfig):
         )
         train_dataloaders[data_name] = train_dataloader
     from src.utils.dataloader import concat_dataloader
+
     train_dataloaders = concat_dataloader(train_dataloaders)
 
-    val_dataloaders = {}
-    for data_name in cfg.test_datasets:
-        config_dataloader = cfg.data[data_name]
-        val_dataloader = DataLoader(
-            instantiate(config_dataloader),
-            batch_size=cfg.machine.batch_size,
-            num_workers=cfg.machine.num_workers,
-            shuffle=False,
-        )
-        val_dataloaders[data_name] = val_dataloader
-        logging.info(
-            f"Loading validation dataloader with {data_name}, size {len(val_dataloader)} done!"
-        )
-    val_dataloaders = concat_dataloader(val_dataloaders)
+    # val_dataloaders = {}
+    # for data_name in cfg.test_datasets:
+    #     config_dataloader = cfg.data[data_name]
+    #     val_dataloader = DataLoader(
+    #         instantiate(config_dataloader),
+    #         batch_size=cfg.machine.batch_size,
+    #         num_workers=cfg.machine.num_workers,
+    #         shuffle=False,
+    #     )
+    #     val_dataloaders[data_name] = val_dataloader
+    #     logging.info(
+    #         f"Loading validation dataloader with {data_name}, size {len(val_dataloader)} done!"
+    #     )
+    # val_dataloaders = concat_dataloader(val_dataloaders)
     logging.info("Fitting the model..")
     trainer.fit(
         model,
         train_dataloaders=train_dataloaders,
-        val_dataloaders=val_dataloaders,
-        ckpt_path=cfg.model.checkpoint_path
-        if cfg.model.checkpoint_path is not None and cfg.use_pretrained
-        else None,
+        # val_dataloaders=val_dataloaders,
     )
     logging.info(f"Fitting done")
 

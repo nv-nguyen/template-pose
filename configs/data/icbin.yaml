@@ -7,3 +7,11 @@ source:
   unzip_mode: unzip
   processing:
 
+dataloader:
+  _target_: src.dataloader.bop.BOPDataset
+  root_dir: ${machine.root_dir}/icbin
+  template_dir: ${machine.root_dir}/templates/icbin
+  obj_ids:
+  reset_metaData: True
+  img_size: 256
+  cropping_with_bbox: True

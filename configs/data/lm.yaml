@@ -9,10 +9,11 @@ source:
   processing: 
 
 dataloader:
-  _target_: src.dataloader.lm.LINEMOD
+  _target_: src.dataloader.bop.LINEMOD
   root_dir: ${machine.root_dir}/lm
   template_dir: ${machine.root_dir}/templates/linemod
   split_name: ${split_name}
   reset_metaData: True
   mode:
   img_size: 256
+  cropping_with_bbox: True

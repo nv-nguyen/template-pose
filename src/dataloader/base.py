@@ -47,8 +47,6 @@ class BaseBOP(Dataset):
         if isinstance(split, str):
             if split is not None:
                 split_folder = osp.join(self.root_dir, split)
-            else:
-                split_folder = self.root_dir
             self.list_scenes = sorted(
                 [
                     osp.join(split_folder, scene)
@@ -65,6 +63,8 @@ class BaseBOP(Dataset):
                     if os.path.isdir(osp.join(self.root_dir, scene))
                 ]
             )
+        else:
+            raise NotImplementedError
         logging.info(f"Found {len(self.list_scenes)} scenes")
 
     def load_scene(self, path, use_visible_mask=True):
@@ -100,6 +100,8 @@ class BaseBOP(Dataset):
                 "mask_visib_path": [],
                 "depth_path": [],
                 "visib_fract": [],
+                "bbox_obj": [],
+                "bbox_visib": [],
                 "intrinsic": [],
                 "idx_template": [],
                 "inplane": [],
@@ -182,7 +184,19 @@ class BaseBOP(Dataset):
                                 video_metaData["scene_camera"][f"{id_frame}"]["cam_K"]
                             )
                             metaData["visib_fract"].append(
-                                video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj]
+                                video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
+                                    "visib_fract"
+                                ]
+                            )
+                            metaData["bbox_obj"].append(
+                                video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
+                                    "bbox_obj"
+                                ]
+                            )
+                            metaData["bbox_visib"].append(
+                                video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
+                                    "bbox_visib"
+                                ]
                             )
                             metaData["idx_template"].append(
                                 templates_frame[idx_obj]["idx_template"]
