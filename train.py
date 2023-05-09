@@ -73,6 +73,7 @@ def train(cfg: DictConfig):
         config_dataloader.split = split
         config_dataloader.reset_metaData = False
         config_dataloader.use_augmentation = cfg.use_augmentation
+        config_dataloader.use_random_geometric = cfg.use_random_geometric
         train_dataloader = DataLoader(
             instantiate(config_dataloader),
             batch_size=cfg.machine.batch_size,

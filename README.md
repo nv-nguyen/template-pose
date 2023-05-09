@@ -95,9 +95,10 @@ Optional: This pre-rendered template set can be manually downloaded from [here](
 ./src/scripts/render_all.sh
 ```
 
+<details><summary>Click to expand</summary>
+
 It is important to verify that all the datasets are correctly downloaded and processed. For example, by counting the number of images of each folder:
 
-<details><summary>Click to expand</summary>
 
 ```
 for dir in $ROOT_DIR/datasets/*     

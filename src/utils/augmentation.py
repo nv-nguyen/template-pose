@@ -6,6 +6,7 @@ from PIL import ImageEnhance, ImageFilter, Image
 import numpy as np
 import random
 import logging
+from torchvision.transforms import RandomResizedCrop, ToTensor
 
 
 class PillowRGBAugmentation:
@@ -136,3 +137,58 @@ class Augmentator:
         img_aug = self.blur(img_aug)
         img_aug = self.gaussian_noise(img_aug)
         return img_aug
+
+
+class CenterCropRandomResizedCrop:
+    def __init__(
+        self,
+        scale_range=[0.8, 1.0],
+        ratio_range=[3.0 / 4, 4.0 / 3],
+        translation_x=[-0.02, 0.02],
+        translation_y=[-0.02, 0.02],
+    ):
+        self.scale_range = scale_range
+        self.ratio_range = ratio_range
+        self.translation_x = translation_x
+        self.translation_y = translation_y
+
+    def transform_bbox(self, bbox, scale, aspect_ratio):
+        # Calculate center point of bbox
+        cx = (bbox[0] + bbox[2]) / 2.0
+        cy = (bbox[1] + bbox[3]) / 2.0
+
+        # Scale the bbox around the center point
+        width = bbox[2] - bbox[0]
+        height = bbox[3] - bbox[1]
+        
+        scaled_width = width * scale
+        scaled_height = height * scale * aspect_ratio
+        scaled_bbox = [
+            cx - scaled_width / 2.0,
+            cy - scaled_height / 2.0,
+            cx + scaled_width / 2.0,
+            cy + scaled_height / 2.0,
+        ]
+        return scaled_bbox
+
+    def __call__(self, imgs, bboxes):
+        scale = random.uniform(*self.scale_range)
+        aspect_ratio = random.uniform(*self.ratio_range)
+        # translation_x = random.uniform(*self.translation_x)
+        # translation_y = random.uniform(*self.translation_y)
+
+        if not isinstance(imgs, list):
+            imgs = [imgs]
+            bboxes = [bboxes]
+
+        imgs_cropped_transformed = []
+        for idx in range(len(imgs)):
+            bbox_transformed = self.transform_bbox(
+                bbox=bboxes[idx],
+                scale=scale,
+                aspect_ratio=aspect_ratio,
+                # translation2d=[translation_x, translation_y],
+            )
+            # crop image with bbox_transfromed
+            imgs_cropped_transformed.append(imgs[idx].crop(bbox_transformed))
+        return imgs_cropped_transformed
