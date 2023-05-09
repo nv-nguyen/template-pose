@@ -60,8 +60,8 @@ def render(cfg: DictConfig) -> None:
             )
             cad_paths.append(cad_path)
             template_dirs.append(template_dir)
-
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpus
+    
     start_time = time.time()
     pool = multiprocessing.Pool(processes=int(cfg.num_workers))
     call_blender_proc_with_index = partial(
@@ -81,7 +81,7 @@ def render(cfg: DictConfig) -> None:
         )
     )
     finish_time = time.time()
-    print("Total time to render templates for query:", finish_time - start_time)
+    print(f"Total time to render templates for query: {finish_time - start_time}")
 
 
 if __name__ == "__main__":

@@ -56,13 +56,13 @@ class BaseBOP(Dataset):
                 ]
             )
         elif isinstance(split, list):
-            self.list_scenes = sorted(
-                [
-                    osp.join(self.root_dir, scene)
-                    for scene in split
-                    if os.path.isdir(osp.join(self.root_dir, scene))
-                ]
-            )
+            self.list_scenes = []
+            for scene in split:
+                if not isinstance(scene, str):
+                    scene = f"{scene:06d}"
+                if os.path.isdir(osp.join(self.root_dir, scene)):
+                    self.list_scenes.append(osp.join(self.root_dir, scene))
+            self.list_scenes = sorted(self.list_scenes)
         else:
             raise NotImplementedError
         logging.info(f"Found {len(self.list_scenes)} scenes")

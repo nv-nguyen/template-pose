@@ -82,6 +82,7 @@ def train(cfg: DictConfig):
         logging.info(
             f"Loading train dataloader with {data_name}, size {len(train_dataloader)} done!"
         )
+        logging.info("---"*100)
         train_dataloaders[data_name] = train_dataloader
     from src.utils.dataloader import concat_dataloader
 

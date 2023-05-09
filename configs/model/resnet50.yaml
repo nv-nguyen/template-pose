@@ -11,4 +11,4 @@ weight_decay: 0.0005
 warm_up_steps: 1000
 log_interval: 1000
 log_dir: ${save_dir}/media
-use_all_gather: false
+use_all_gather: true # for multi-gpu training with larger batch_size -> efficient for contrast learning with InfoNCE

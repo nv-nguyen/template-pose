@@ -130,10 +130,13 @@ If everything is fine, here are the number of images that you should get:
  ##  Launch a training  :rocket:
 
 <details><summary>Click to expand</summary>
+
 ### 0. (Optional) We use pretrained weight from MoCo v2. You can download it from [here]() or run:
+
 ```
 python -m src.scripts.download_moco_weights
 ```
+
 If you don't want to use pretrained weights, you can remove the path in [this line](https://drive.google.com/drive/folders/1p9eJ8dTxR3rVinvaFxPw5N_3IGSlS2_E?usp=sharing).
 ### 1. Training on all BOP datasets except LINEMOD and T-LESS (only objects 19-30)
 ```
@@ -141,6 +144,7 @@ python train.py name_exp=train_all
 ```
 
 The parsing is done with Hydra library. You can override anything in the configuration by passing arguments. For example:
+
 ```
 # experiment 1: change batch_size, using data augmentation, update name_exp
 python train.py machine.batch_size=2 use_augmentation=True name_exp=train_augmentation
@@ -148,6 +152,7 @@ python train.py machine.batch_size=2 use_augmentation=True name_exp=train_augmen
 # experiment 2: change batch_size, using data augmentation, update name_exp, update_lr
 python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_exp=train_augmentation_lr0.001
 ```
+
 </details>
 
 ## Acknowledgement

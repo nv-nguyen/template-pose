@@ -41,7 +41,10 @@ class BOPDataset(BaseBOP):
         self.augmentator = Augmentator()
 
         self.load_template_poses(template_dir=template_dir)
-        self.load_list_scene(split=obj_ids if obj_ids is not None else split)
+        if isinstance(obj_ids, str):
+            obj_ids = [int(obj_id) for obj_id in obj_ids.split(",")]
+            logging.info(f"ATTENTION: Loading {len(obj_ids)} objects!")
+        self.load_list_scene(split=split)
         self.load_metaData(
             reset_metaData=reset_metaData,
             mode="query",
@@ -74,7 +77,9 @@ class BOPDataset(BaseBOP):
                 transforms.Lambda(lambda mask: torch.from_numpy(mask).unsqueeze(0)),
             ]
         )
-        logging.info(f"Length of dataloader: {self.__len__()}")
+        logging.info(
+            f"Length of dataloader: {self.__len__()} containing objects {np.unique(self.metaData['obj_id'])}"
+        )
 
     def load_template_poses(self, template_dir):
         self.templates_poses = np.load(osp.join(template_dir, "obj_poses.npy"))
@@ -85,18 +90,21 @@ class BOPDataset(BaseBOP):
         selected_obj_id = [id for id in self.obj_ids]
         logging.info(f"Available {avail_obj_id}, selected {selected_obj_id} ")
         selected_index = []
-        for obj_id in self.obj_ids:
-            df_obj = df[df["obj_id"] == obj_id]
-            df_obj = df[df["visib_fract"] == 1]
+        index_dataframe = np.arange(0, len(df))
+        for obj_id in selected_obj_id:
+            selected_index_obj = index_dataframe[# df["obj_id"] == obj_id]
+                np.logical_and(df["obj_id"] == obj_id, df["visib_fract"] >= 0.5)]
             if percentage > 50:
-                df_obj = df_obj[: int(percentage / 100 * len(df_obj))]  # keep first
+                selected_index_obj = selected_index_obj[
+                    : int(percentage / 100 * len(selected_index_obj))
+                ]  # keep first
             else:
-                df_obj = df_obj[
-                    int((1 - percentage / 100) * len(df_obj)) :
+                selected_index_obj = selected_index_obj[
+                    int((1 - percentage / 100) * len(selected_index_obj)) :
                 ]  # keep last
-            selected_index.extend(df_obj.index)
-        df = df.loc[selected_index]
-        logging.info(f"Subsampled to {len(df)} ({percentage}%) images")
+            selected_index.extend(selected_index_obj.tolist())
+        df = df.iloc[selected_index]
+        logging.info(f"Subsampled from {len(index_dataframe)} to {len(df)} ({percentage}%) images")
         return df
 
     def __len__(self):

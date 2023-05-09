@@ -1,5 +1,6 @@
 # Additional 
 configs/user/nguyen.yaml
+sync_wandb.sh
 .hydra/
 outputs/
 None/
