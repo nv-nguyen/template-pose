@@ -104,7 +104,7 @@ It is important to verify that all the datasets are correctly downloaded and pro
 for dir in $ROOT_DIR/datasets/*     
 do
     echo ${dir}
-    find ${dir} -name "*.png"|wc -l     
+    find ${dir} -name "*.png" | wc -l     
 done
 ```
 

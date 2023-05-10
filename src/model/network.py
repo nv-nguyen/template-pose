@@ -36,11 +36,10 @@ class FeatureExtractor(BaseFeatureExtractor):
             nn.ReLU(inplace=False),
             conv1x1(256, descriptor_size),
         )
-
+        self.metric = GeodesicError()
         self.loss = InfoNCE()
         self.occlusion_sim = OcclusionAwareSimilarity(threshold=threshold)
         self.sim_distance = nn.CosineSimilarity(dim=1)  # eps=1e-2
-        self.geodesic_distance = GeodesicError()
 
         # define optimizer
         self.weight_decay = float(kwargs["weight_decay"])

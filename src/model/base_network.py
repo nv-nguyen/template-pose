@@ -8,6 +8,7 @@ from torchvision.utils import make_grid, save_image
 import os
 import wandb
 import torchvision.transforms as transforms
+from src.model.loss import GeodesicError
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -74,6 +75,7 @@ class BaseFeatureExtractor(pl.LightningModule):
         # define the network
         super(BaseFeatureExtractor, self).__init__()
         self.loss = InfoNCE()
+        self.metric = GeodesicError()
         self.occlusion_sim = OcclusionAwareSimilarity(threshold=threshold)
         self.sim_distance = nn.CosineSimilarity(dim=1)  # eps=1e-2
 
@@ -293,10 +295,66 @@ class BaseFeatureExtractor(pl.LightningModule):
         )
         return loss
 
-    def validation_step(
-        self,
-    ):
-        return
+    def validation_step(self, batch, idx):
+        for dataset_name in batch:
+            self.eval_batch(batch[dataset_name], dataset_name)
+
+    def eval_batch(self, batch, dataset_name, k=5):
+        query = batch["query"]  # B x C x W x H
+        templates = batch["templates"]  # B x N x C x W x H
+        template_masks = batch["template_masks"]
+        template_poses = batch["template_poses"]
+        feature_query = self.forward(query)
+
+        # get predictions
+        batch_size = query.shape[0]
+        pred_indexes = torch.zeros(batch_size, k, device=self.device).long()
+        for idx in range(batch_size):
+            feature_template = self.forward(templates[idx, :])
+            mask = template_masks[idx, :]
+            matrix_sim = self.calculate_similarity_for_search(
+                feature_query[idx].unsqueeze(0), feature_template, mask, training=False
+            )
+            weight_sim, pred_index = matrix_sim.topk(k=k)
+            pred_indexes[idx] = pred_index.reshape(-1)
+
+        retrieved_template = templates[
+            torch.arange(0, batch_size, device=query.device), pred_indexes[:, 0]
+        ]
+        retrieved_poses = template_poses[
+            torch.arange(0, batch_size, device=query.device).unsqueeze(1).repeat(1, k),
+            pred_indexes,
+        ]
+        # visualize prediction
+        save_image_path = os.path.join(
+            self.log_dir,
+            f"retrieved_val_step{self.global_step}_rank{self.global_rank}.png",
+        )
+        vis_imgs = [
+            self.transform_inverse(query),
+            self.transform_inverse(retrieved_template),
+        ]
+        vis_imgs, ncol = put_image_to_grid(vis_imgs)
+        vis_imgs_resized = vis_imgs.clone()
+        vis_imgs_resized = F.interpolate(
+            vis_imgs_resized, (64, 64), mode="bilinear", align_corners=False
+        )
+        save_image(
+            vis_imgs_resized,
+            save_image_path,
+            nrow=ncol * 4,
+        )
+        self.logger.experiment.log(
+            {f"retrieval/{dataset_name}": wandb.Image(save_image_path)},
+        )
+
+        # calculate the scores
+        error, acc = self.metric(
+            predR=retrieved_poses,
+            gtR=batch["query_pose"],
+            symmetry=torch.zeros(batch_size, device=self.device).long(),
+        )
+        self.monitoring_score(dict_scores=acc, split_name=f"{dataset_name}")
 
     def monitoring_score(self, dict_scores, split_name):
         for key, value in dict_scores.items():

@@ -12,6 +12,11 @@ import cv2
 import os.path as osp
 from src.utils.augmentation import Augmentator, CenterCropRandomResizedCrop
 from tqdm import tqdm
+from src.poses.utils import (
+    get_obj_poses_from_template_level,
+    load_index_level0_in_level2,
+    crop_frame,
+)
 
 # set level logging
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +34,7 @@ class BOPDataset(BaseBOP):
         use_random_geometric=False,
         cropping_with_bbox=True,
         reset_metaData=False,
+        isTesting=False,
         **kwargs,
     ):
         self.root_dir = root_dir
@@ -39,11 +45,12 @@ class BOPDataset(BaseBOP):
         self.mask_size = 25 if img_size == 64 else int(img_size // 8)
         self.cropping_with_bbox = cropping_with_bbox
         self.use_augmentation = use_augmentation
-        self.augmentator = Augmentator()
         self.use_random_geometric = use_random_geometric
+        self.augmentator = Augmentator()
         self.random_cropper = CenterCropRandomResizedCrop()
 
         self.load_template_poses(template_dir=template_dir)
+        self.load_testing_indexes()
         if isinstance(obj_ids, str):
             obj_ids = [int(obj_id) for obj_id in obj_ids.split(",")]
             logging.info(f"ATTENTION: Loading {len(obj_ids)} objects!")
@@ -57,13 +64,20 @@ class BOPDataset(BaseBOP):
             if obj_ids is not None
             else np.unique(self.metaData["obj_id"]).tolist()
         )
-        if self.split.startswith("train") or self.split.startswith("val"):
+        if (
+            self.split.startswith("train") or self.split.startswith("val")
+        ) and not isTesting:
             # keep only 90% of the data for training for each object
             self.metaData = self.subsample(self.metaData, 90)
             self.isTesting = False
-        elif self.split.startswith("test"):
+        elif self.split.startswith("test") or isTesting:
             self.metaData = self.subsample(self.metaData, 10)
             self.isTesting = True
+            self.use_augmentation = False
+            self.use_random_geometric = False
+        else:
+            logging.warning(f"Split {split} and mode {isTesting} not recognized")
+            raise NotImplementedError
         self.rgb_transform = transforms.Compose(
             [
                 transforms.Resize((self.img_size, self.img_size)),
@@ -81,7 +95,7 @@ class BOPDataset(BaseBOP):
             ]
         )
         logging.info(
-            f"Length of dataloader: {self.__len__()} containing objects {np.unique(self.metaData['obj_id'])}"
+            f"Length of dataloader: {self.__len__()} with mode {self.isTesting} containing objects {np.unique(self.metaData['obj_id'])}"
         )
 
     def load_template_poses(self, template_dir):
@@ -154,13 +168,16 @@ class BOPDataset(BaseBOP):
 
     def crop(self, imgs, bboxes):
         if self.cropping_with_bbox:
-            if self.use_random_geometric:
+            if self.use_random_geometric and not self.isTesting:
                 imgs_cropped = self.random_cropper(imgs, bboxes)
             else:
                 imgs_cropped = []
                 for i in range(len(imgs)):
                     imgs_cropped.append(imgs[i].crop(bboxes[i]))
             return imgs_cropped
+
+    def load_testing_indexes(self):
+        self.testing_indexes = load_index_level0_in_level2("all")
 
     def __getitem__(self, idx):
         if not self.isTesting:
@@ -182,6 +199,43 @@ class BOPDataset(BaseBOP):
                 "template": template,
                 "template_mask": template_mask,
             }
+        else:
+            query_pose = self.metaData.iloc[idx]["pose"]
+            obj_id = self.metaData.iloc[idx]["obj_id"]
+            query = self.load_image(idx, type_img="real")
+            query_bbox = self.get_bbox(None, idx=idx)
+            imgs, bboxes = [query], [query_bbox]
+
+            # load all templates
+            for idx in self.testing_indexes:
+                tmp = Image.open(f"{self.template_dir}/obj_{obj_id:06d}/{idx:06d}.png")
+                imgs.append(tmp)
+                bboxes.append(self.get_bbox(tmp))
+            # crop and normalize image
+            imgs = self.crop(imgs, bboxes)
+            query = self.rgb_transform(imgs[0])
+            templates = [
+                self.rgb_transform(imgs[i].convert("RGB")) for i in range(1, len(imgs))
+            ]
+            template_masks = [
+                self.mask_transform(imgs[i].getchannel("A"))
+                for i in range(1, len(imgs))
+            ]
+            templates = torch.stack(templates, dim=0)
+            template_masks = torch.stack(template_masks, dim=0)
+
+            # loading poses
+            query_pose = torch.from_numpy(np.array(query_pose).reshape(4, 4)[:3, :3])
+            template_poses = torch.from_numpy(
+                self.templates_poses[self.testing_indexes]
+            )[:, :3, :3]
+            return {
+                "query": query,
+                "query_pose": query_pose,
+                "templates": templates,
+                "template_masks": template_masks,
+                "template_poses": template_poses,
+            }
 
 
 if __name__ == "__main__":
@@ -191,7 +245,7 @@ if __name__ == "__main__":
     root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose-released/datasets"
     dataset_names = [
         "hb",
-        # "tudl",       
+        # "tudl",
         # "hope",
         # "icmi",
         # "icbin",
@@ -241,6 +295,7 @@ if __name__ == "__main__":
                 reset_metaData=False,
                 use_augmentation=True,
                 use_random_geometric=True,
+                isTesting=True,
             )
             # train_data = DataLoader(
             #     dataset, batch_size=16, shuffle=False, num_workers=10
@@ -253,13 +308,16 @@ if __name__ == "__main__":
             # logging.info(f"{dataset_name} is running correctly!")
             for idx in range(len(dataset)):
                 sample = dataset[idx]
-                query = transform_inverse(sample["query"])
-                template = transform_inverse(sample["template"])
-                query = query.permute(1, 2, 0).numpy()
-                query = Image.fromarray(np.uint8(query * 255))
-                query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
-                template = template.permute(1, 2, 0).numpy()
-                template = Image.fromarray(np.uint8(template * 255))
-                template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
-                if idx == 10:
-                    break
+                for k in sample:
+                    print(k, sample[k].shape)
+                break
+                # query = transform_inverse(sample["query"])
+                # template = transform_inverse(sample["template"])
+                # query = query.permute(1, 2, 0).numpy()
+                # query = Image.fromarray(np.uint8(query * 255))
+                # query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
+                # template = template.permute(1, 2, 0).numpy()
+                # template = Image.fromarray(np.uint8(template * 255))
+                # template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
+                # if idx == 10:
+                #     break

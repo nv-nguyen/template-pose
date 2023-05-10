@@ -8,6 +8,7 @@ import torch.nn as nn
 from src.utils.weight import load_checkpoint
 from src.dataloader.lm_utils import get_list_id_obj_from_split_name
 import pytorch_lightning as pl
+from src.utils.dataloader import concat_dataloader
 
 pl.seed_everything(2022)
 # set level logging
@@ -40,7 +41,7 @@ def train(cfg: DictConfig):
         cfg.machine.trainer.devices = num_gpus
         cfg.machine.trainer.num_nodes = num_nodes
         logging.info(f"Slurm config: {num_gpus} gpus,  {num_nodes} nodes")
-        
+
     trainer = instantiate(cfg.machine.trainer)
     logging.info(f"Trainer initialized")
 
@@ -54,6 +55,36 @@ def train(cfg: DictConfig):
             checkpoint_key="model",
         )
 
+    val_dataloaders = {}
+    for data_name in cfg.train_datasets:
+        config_dataloader = cfg.data[data_name].dataloader
+        splits = [
+            split
+            for split in os.listdir(config_dataloader.root_dir)
+            if os.path.isdir(os.path.join(config_dataloader.root_dir, split))
+        ]
+        splits = [
+            split
+            for split in splits
+            if split.startswith("train") or split.startswith("val")
+        ]
+        assert len(splits) == 1, f"Found {splits} train splits for {data_name}"
+        split = splits[0]
+        config_dataloader.reset_metaData = False
+        config_dataloader.split = split
+        config_dataloader.isTesting = True
+        val_dataloader = DataLoader(
+            instantiate(config_dataloader),
+            batch_size=cfg.machine.batch_size,
+            num_workers=cfg.machine.num_workers,
+            shuffle=False,
+        )
+        val_dataloaders[data_name] = val_dataloader
+        logging.info(
+            f"Loading validation dataloader with {data_name}, size {len(val_dataloader)} done!"
+        )
+    val_dataloaders = concat_dataloader(val_dataloaders)
+
     train_dataloaders = {}
     for data_name in cfg.train_datasets:
         config_dataloader = cfg.data[data_name].dataloader
@@ -65,13 +96,13 @@ def train(cfg: DictConfig):
         splits = [
             split
             for split in splits
-            if split.startswith("train")
-            or split.startswith("val")
+            if split.startswith("train") or split.startswith("val")
         ]
         assert len(splits) == 1, f"Found {splits} train splits for {data_name}"
         split = splits[0]
         config_dataloader.split = split
         config_dataloader.reset_metaData = False
+        config_dataloader.isTesting = False
         config_dataloader.use_augmentation = cfg.use_augmentation
         config_dataloader.use_random_geometric = cfg.use_random_geometric
         train_dataloader = DataLoader(
@@ -83,31 +114,15 @@ def train(cfg: DictConfig):
         logging.info(
             f"Loading train dataloader with {data_name}, size {len(train_dataloader)} done!"
         )
-        logging.info("---"*100)
+        logging.info("---" * 100)
         train_dataloaders[data_name] = train_dataloader
-    from src.utils.dataloader import concat_dataloader
-
     train_dataloaders = concat_dataloader(train_dataloaders)
 
-    # val_dataloaders = {}
-    # for data_name in cfg.test_datasets:
-    #     config_dataloader = cfg.data[data_name]
-    #     val_dataloader = DataLoader(
-    #         instantiate(config_dataloader),
-    #         batch_size=cfg.machine.batch_size,
-    #         num_workers=cfg.machine.num_workers,
-    #         shuffle=False,
-    #     )
-    #     val_dataloaders[data_name] = val_dataloader
-    #     logging.info(
-    #         f"Loading validation dataloader with {data_name}, size {len(val_dataloader)} done!"
-    #     )
-    # val_dataloaders = concat_dataloader(val_dataloaders)
-    logging.info("Fitting the model..")
+    logging.info(f"Fitting the model: train_size={len(train_dataloaders)}, val_size={len(val_dataloaders)}")
     trainer.fit(
         model,
         train_dataloaders=train_dataloaders,
-        # val_dataloaders=val_dataloaders,
+        val_dataloaders=val_dataloaders,
     )
     logging.info(f"Fitting done")
 
