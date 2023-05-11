@@ -10,7 +10,7 @@ from src.dataloader.base import BaseBOP
 import logging
 import cv2
 import os.path as osp
-from src.utils.augmentation import Augmentator, CenterCropRandomResizedCrop
+from src.utils.augmentation import Augmentator, CenterCropRandomResizedCrop, RandomRotation
 from tqdm import tqdm
 from src.poses.utils import (
     get_obj_poses_from_template_level,
@@ -31,7 +31,8 @@ class BOPDataset(BaseBOP):
         obj_ids,
         img_size,
         use_augmentation=False,
-        use_random_geometric=False,
+        use_random_rotation = False,
+        use_random_scale_translation = False,
         cropping_with_bbox=True,
         reset_metaData=False,
         isTesting=False,
@@ -45,9 +46,11 @@ class BOPDataset(BaseBOP):
         self.mask_size = 25 if img_size == 64 else int(img_size // 8)
         self.cropping_with_bbox = cropping_with_bbox
         self.use_augmentation = use_augmentation
-        self.use_random_geometric = use_random_geometric
+        self.use_random_rotation = use_random_rotation
+        self.use_random_scale_translation = use_random_scale_translation
         self.augmentator = Augmentator()
         self.random_cropper = CenterCropRandomResizedCrop()
+        self.random_rotator = RandomRotation()
 
         self.load_template_poses(template_dir=template_dir)
         self.load_testing_indexes()
@@ -74,7 +77,8 @@ class BOPDataset(BaseBOP):
             self.metaData = self.subsample(self.metaData, 10)
             self.isTesting = True
             self.use_augmentation = False
-            self.use_random_geometric = False
+            self.use_random_rotation = False
+            self.use_random_scale_translation = False
         else:
             logging.warning(f"Split {split} and mode {isTesting} not recognized")
             raise NotImplementedError
@@ -94,6 +98,9 @@ class BOPDataset(BaseBOP):
                 transforms.Lambda(lambda mask: torch.from_numpy(mask).unsqueeze(0)),
             ]
         )
+        self.random_rotation_transfrom = transforms.Compose([
+            transforms.RandomRotation(degrees = (-90,90))
+        ])
         logging.info(
             f"Length of dataloader: {self.__len__()} with mode {self.isTesting} containing objects {np.unique(self.metaData['obj_id'])}"
         )
@@ -168,7 +175,7 @@ class BOPDataset(BaseBOP):
 
     def crop(self, imgs, bboxes):
         if self.cropping_with_bbox:
-            if self.use_random_geometric and not self.isTesting:
+            if self.use_random_scale_translation and not self.isTesting:
                 imgs_cropped = self.random_cropper(imgs, bboxes)
             else:
                 imgs_cropped = []
@@ -178,6 +185,7 @@ class BOPDataset(BaseBOP):
 
     def load_testing_indexes(self):
         self.testing_indexes = load_index_level0_in_level2("all")
+        
 
     def __getitem__(self, idx):
         if not self.isTesting:
@@ -193,6 +201,8 @@ class BOPDataset(BaseBOP):
             template = self.rgb_transform(template)
             template_mask = self.mask_transform(template_mask)
 
+            if self.use_random_rotation:
+                [query, template, template_mask] = self.random_rotator([query, template, template_mask])
             # generate a random resized crop parameters
             return {
                 "query": query,
@@ -294,8 +304,9 @@ if __name__ == "__main__":
                 cropping_with_bbox=True,
                 reset_metaData=False,
                 use_augmentation=True,
-                use_random_geometric=True,
-                isTesting=True,
+                use_random_scale_translation=True,
+                use_random_rotation=True,
+                isTesting=False,
             )
             # train_data = DataLoader(
             #     dataset, batch_size=16, shuffle=False, num_workers=10
@@ -308,16 +319,19 @@ if __name__ == "__main__":
             # logging.info(f"{dataset_name} is running correctly!")
             for idx in range(len(dataset)):
                 sample = dataset[idx]
-                for k in sample:
-                    print(k, sample[k].shape)
-                break
-                # query = transform_inverse(sample["query"])
-                # template = transform_inverse(sample["template"])
-                # query = query.permute(1, 2, 0).numpy()
-                # query = Image.fromarray(np.uint8(query * 255))
-                # query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
-                # template = template.permute(1, 2, 0).numpy()
-                # template = Image.fromarray(np.uint8(template * 255))
-                # template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
-                # if idx == 10:
-                #     break
+                # for k in sample:
+                #     print(k, sample[k].shape)
+                # break
+                query = transform_inverse(sample["query"])
+                template = transform_inverse(sample["template"])
+                query = query.permute(1, 2, 0).numpy()
+                query = Image.fromarray(np.uint8(query * 255))
+                query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
+                template = template.permute(1, 2, 0).numpy()
+                template = Image.fromarray(np.uint8(template * 255))
+                template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
+                mask = sample["template_mask"].permute(1, 2, 0).numpy()[:, :, 0]
+                mask = Image.fromarray(np.uint8(mask * 255))
+                mask.save(f"./tmp/{dataset_name}_{split}_{idx}_mask.png")
+                if idx == 10:
+                    break

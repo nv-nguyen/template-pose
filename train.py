@@ -57,6 +57,8 @@ def train(cfg: DictConfig):
 
     val_dataloaders = {}
     for data_name in cfg.train_datasets:
+        if data_name == "hope":
+            continue
         config_dataloader = cfg.data[data_name].dataloader
         splits = [
             split
@@ -104,7 +106,10 @@ def train(cfg: DictConfig):
         config_dataloader.reset_metaData = False
         config_dataloader.isTesting = False
         config_dataloader.use_augmentation = cfg.use_augmentation
-        config_dataloader.use_random_geometric = cfg.use_random_geometric
+        config_dataloader.use_random_rotation = cfg.use_random_rotation
+        config_dataloader.use_random_scale_translation = (
+            cfg.use_random_scale_translation
+        )
         train_dataloader = DataLoader(
             instantiate(config_dataloader),
             batch_size=cfg.machine.batch_size,
@@ -118,7 +123,9 @@ def train(cfg: DictConfig):
         train_dataloaders[data_name] = train_dataloader
     train_dataloaders = concat_dataloader(train_dataloaders)
 
-    logging.info(f"Fitting the model: train_size={len(train_dataloaders)}, val_size={len(val_dataloaders)}")
+    logging.info(
+        f"Fitting the model: train_size={len(train_dataloaders)}, val_size={len(val_dataloaders)}"
+    )
     trainer.fit(
         model,
         train_dataloaders=train_dataloaders,

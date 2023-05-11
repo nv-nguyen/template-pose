@@ -7,6 +7,7 @@ import numpy as np
 import random
 import logging
 from torchvision.transforms import RandomResizedCrop, ToTensor
+from torchvision import transforms
 
 
 class PillowRGBAugmentation:
@@ -160,7 +161,7 @@ class CenterCropRandomResizedCrop:
         # Scale the bbox around the center point
         width = bbox[2] - bbox[0]
         height = bbox[3] - bbox[1]
-        
+
         scaled_width = width * scale
         scaled_height = height * scale * aspect_ratio
         scaled_bbox = [
@@ -192,3 +193,26 @@ class CenterCropRandomResizedCrop:
             # crop image with bbox_transfromed
             imgs_cropped_transformed.append(imgs[idx].crop(bbox_transformed))
         return imgs_cropped_transformed
+
+
+class RandomRotation:
+    def __init__(self, degrees_range=[-90, 90]):
+        self.degrees_range = degrees_range
+
+    def __call__(self, imgs):
+        angle = random.uniform(*self.degrees_range)
+        fill_value = np.random.randint(0, 255, size=4)
+        if not isinstance(imgs, list):
+            imgs = [imgs]
+
+        imgs_rotated = []
+        for idx in range(len(imgs)):
+            num_channels = imgs[idx].shape[0]
+            if num_channels == 1:
+                fill_value = np.zeros(4, dtype=np.uint8)
+            imgs_rotated.append(
+                transforms.functional.rotate(
+                    imgs[idx], angle, fill=fill_value[: num_channels].tolist()
+                )
+            )
+        return imgs_rotated
