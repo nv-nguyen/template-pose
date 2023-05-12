@@ -92,9 +92,7 @@ python -m src.scripts.download_prerendered_templates
 ```
 Optional: This pre-rendered template set can be manually downloaded from [here](https://drive.google.com/drive/folders/1p9eJ8dTxR3rVinvaFxPw5N_3IGSlS2_E?usp=sharing) (12GB).
 #### Option 2: Rendering synthetic templates from scratch (this will take around 1 hour with Nvidia V100)
-```
-./src/scripts/render_all.sh
-```)
+
 ```
 ./src/scripts/render_pyrender_all.sh
 ```
