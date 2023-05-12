@@ -10,7 +10,7 @@ source:
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
   root_dir: ${machine.root_dir}/datasets/icbin
-  template_dir: ${machine.root_dir}/datasets/templates/icbin
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/icbin
   obj_ids:
   reset_metaData: True
   img_size: 256

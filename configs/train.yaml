@@ -11,7 +11,7 @@ save_dir: ${machine.root_dir}/results/${name_exp}
 name_exp: train
 use_pretrained: True
 use_augmentation: True
-use_random_rotation: True
+use_random_rotation: False
 use_random_scale_translation: True
 train_datasets:
   - tless_train

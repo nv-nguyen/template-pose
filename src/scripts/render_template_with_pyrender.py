@@ -8,8 +8,7 @@ import multiprocessing
 import logging
 import os, sys
 import os.path as osp
-from src.poses.utils import get_obj_poses_from_template_level, get_root_project
-from src.dataloader.lm_utils import query_name_to_real_id
+from src.poses.utils import get_obj_poses_from_template_level
 
 # set level logging
 logging.basicConfig(level=logging.INFO)
@@ -36,12 +35,14 @@ def call_blender_proc(
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    command = f"blenderproc run ./src/poses/blenderproc.py {cad_path} {obj_pose_path} {output_dir} {gpus_devices}"
+    # command = f"blenderproc run ./src/poses/blenderproc.py {cad_path} {obj_pose_path} {output_dir} {gpus_devices}"
+    command = f"python -m src.poses.pyrender {cad_path} {obj_pose_path} {output_dir} {gpus_devices}"
     if disable_output:
         command += " true"
     else:
         command += " false"
     os.system(command)
+
 
 @hydra.main(
     version_base=None,
@@ -50,7 +51,7 @@ def call_blender_proc(
 )
 def render(cfg: DictConfig) -> None:
     OmegaConf.set_struct(cfg, False)
-    save_dir = osp.join(osp.dirname(cfg.data.lm.root_dir), "templates_v2")
+    save_dir = osp.join(osp.dirname(cfg.data.lm.root_dir), "templates_pyrender")
 
     template_poses = get_obj_poses_from_template_level(level=2, pose_distribution="all")
     template_poses[:, :3, 3] *= 0.4  # zoom to object
@@ -67,7 +68,11 @@ def render(cfg: DictConfig) -> None:
     cad_paths = []
     output_dirs = []
     object_ids = sorted(
-        [int(name[4:][:-4]) for name in os.listdir(cad_dir) if name.endswith(".ply") and not name.endswith("old.ply")]
+        [
+            int(name[4:][:-4])
+            for name in os.listdir(cad_dir)
+            if name.endswith(".ply") and not name.endswith("old.ply")
+        ]
     )
     for object_id in object_ids:
         cad_paths.append(
@@ -80,7 +85,7 @@ def render(cfg: DictConfig) -> None:
         # use obj format instead (make sure you have used python -m src.scripts.process_mesh to convert ply to obj)
         # if cfg.dataset_to_render in ["hope", "ycbv"]:
         #     cad_paths[-1] = cad_paths[-1].replace(".ply", ".obj")
-        
+
         output_dirs.append(
             os.path.join(
                 save_dir,

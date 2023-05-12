@@ -30,6 +30,7 @@ If you like this project, check out related works from our group:
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
+- Releasing synthetic templates with Pyrender for faster rendering 
 - Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [Linemod, HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/datasets/)
 - Adding code to generate poses (OpenCV coordinate) from icosahedron with Blender
 - Parsing with [hydra](https://github.com/facebookresearch/hydra) library, simplifying training_step, testing_step with [pytorch lightning](https://lightning.ai/)
@@ -90,9 +91,12 @@ There are two options for the final step (rendering synthetic templates from CAD
 python -m src.scripts.download_prerendered_templates
 ```
 Optional: This pre-rendered template set can be manually downloaded from [here](https://drive.google.com/drive/folders/1p9eJ8dTxR3rVinvaFxPw5N_3IGSlS2_E?usp=sharing) (12GB).
-#### Option 2: Rendering synthetic templates from scratch
+#### Option 2: Rendering synthetic templates from scratch (this will take around 1 hour with Nvidia V100)
 ```
 ./src/scripts/render_all.sh
+```)
+```
+./src/scripts/render_pyrender_all.sh
 ```
 
 <details><summary>Click to expand</summary>

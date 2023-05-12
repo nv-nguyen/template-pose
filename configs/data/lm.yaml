@@ -11,7 +11,7 @@ source:
 dataloader:
   _target_: src.dataloader.bop.LINEMOD
   root_dir: ${machine.root_dir}/datasets/lm
-  template_dir: ${machine.root_dir}/datasets/templates/linemod
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/linemod
   split_name: ${split_name}
   reset_metaData: True
   mode:

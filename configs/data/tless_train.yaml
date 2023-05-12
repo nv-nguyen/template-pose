@@ -10,7 +10,7 @@ source:
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
   root_dir: ${machine.root_dir}/datasets/tless/train
-  template_dir: ${machine.root_dir}/datasets/templates/tless
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/tless
   obj_ids: "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18"
   reset_metaData: True
   img_size: 256

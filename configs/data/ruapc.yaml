@@ -10,7 +10,7 @@ source:
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
   root_dir: ${machine.root_dir}/datasets/ruapc
-  template_dir: ${machine.root_dir}/datasets/templates/ruapc
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/ruapc
   obj_ids: 
   reset_metaData: True
   img_size: 256

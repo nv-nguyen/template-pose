@@ -10,7 +10,7 @@ source:
 dataloader:
   _target_: src.dataloader.bop.BOPDataset
   root_dir: ${machine.root_dir}/datasets/tudl
-  template_dir: ${machine.root_dir}/datasets/templates/tudl
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/tudl
   obj_ids:
   reset_metaData: True
   img_size: 256
