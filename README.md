@@ -162,7 +162,9 @@ python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_e
 
 </details>
 
- ##  Reproduce quantitative results (all testing objects are unseen during training) :heavy_check_mark:
+ ##  Reproduce quantitative results 
+
+Please note that all testing objects are unseen during training!
 
 <details><summary>Click to expand</summary>
 
