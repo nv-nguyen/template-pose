@@ -163,10 +163,10 @@ python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_e
 
 <details><summary>Click to expand</summary>
 
-### 1. TLess's objects (object 19-31)
+### 1. LINEMOD's objects
 
 ```
-python test.py machine.batch_size=2 use_augmentation=True name_exp=train_augmentation
+python test_lm.py name_exp=test_lm
 ```
 
 </details>
