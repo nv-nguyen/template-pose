@@ -8,3 +8,13 @@ source:
   http: False
   unzip_mode: unzip
   processing: rename
+
+dataloader:
+  _target_: src.dataloader.bop.BOPDatasetTest
+  root_dir: ${machine.root_dir}/datasets/o-lm
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/lm
+  split_name: test
+  reset_metaData: True
+  img_size: 256
+  obj_ids:
+  linemod_setting: True

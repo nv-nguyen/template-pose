@@ -12,3 +12,5 @@ warm_up_steps: 1000
 log_interval: 2000
 log_dir: ${save_dir}/media
 use_all_gather: true # for multi-gpu training with larger batch_size -> efficient for contrast learning with InfoNCE
+
+checkpoint_path: 

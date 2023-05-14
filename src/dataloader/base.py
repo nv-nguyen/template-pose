@@ -154,6 +154,9 @@ class BaseBOP(Dataset):
                             mask_path = osp.join(
                                 scene_path, "mask", f"{id_frame:06d}_{idx_obj:06d}.png"
                             )
+                            mask_scene_path = osp.join(
+                                scene_path, "mask", f"{id_frame:06d}.png"
+                            )
                             mask_visib_path = osp.join(
                                 scene_path,
                                 "mask_visib",
@@ -164,6 +167,8 @@ class BaseBOP(Dataset):
                             )
                             if mask_path in mask_paths:
                                 metaData["mask_path"].append(mask_path)
+                            elif mask_scene_path in mask_paths:
+                                metaData["mask_path"].append(mask_scene_path)
                             else:
                                 metaData["mask_path"].append(None)
                             if mask_visib_path in mask_visib_paths:
@@ -187,16 +192,31 @@ class BaseBOP(Dataset):
                                 video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
                                     "visib_fract"
                                 ]
+                                if "visib_fact"
+                                in video_metaData["scene_gt_info"][f"{id_frame}"][
+                                    idx_obj
+                                ]
+                                else 1.0
                             )
                             metaData["bbox_obj"].append(
                                 video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
                                     "bbox_obj"
                                 ]
+                                if "bbox_obj"
+                                in video_metaData["scene_gt_info"][f"{id_frame}"][
+                                    idx_obj
+                                ]
+                                else None
                             )
                             metaData["bbox_visib"].append(
                                 video_metaData["scene_gt_info"][f"{id_frame}"][idx_obj][
                                     "bbox_visib"
                                 ]
+                                if "bbox_visib"
+                                in video_metaData["scene_gt_info"][f"{id_frame}"][
+                                    idx_obj
+                                ]
+                                else None
                             )
                             metaData["idx_template"].append(
                                 templates_frame[idx_obj]["idx_template"]

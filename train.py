@@ -79,7 +79,7 @@ def train(cfg: DictConfig):
             instantiate(config_dataloader),
             batch_size=cfg.machine.batch_size,
             num_workers=cfg.machine.num_workers,
-            shuffle=False,
+            shuffle=False, # for visualize different samples
         )
         val_dataloaders[data_name] = val_dataloader
         logging.info(
@@ -109,6 +109,9 @@ def train(cfg: DictConfig):
         config_dataloader.use_random_rotation = cfg.use_random_rotation
         config_dataloader.use_random_scale_translation = (
             cfg.use_random_scale_translation
+        )
+        config_dataloader.use_additional_negative_samples_for_training = (
+            cfg.use_additional_negative_samples_for_training
         )
         train_dataloader = DataLoader(
             instantiate(config_dataloader),

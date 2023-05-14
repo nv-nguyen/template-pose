@@ -30,8 +30,9 @@ If you like this project, check out related works from our group:
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
+- Cropping in LINEMOD settings are done with input bounding boxes
 - Releasing synthetic templates with Pyrender for faster rendering 
-- Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [Linemod, HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/datasets/)
+- Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/datasets/)
 - Adding code to generate poses (OpenCV coordinate) from icosahedron with Blender
 - Parsing with [hydra](https://github.com/facebookresearch/hydra) library, simplifying training_step, testing_step with [pytorch lightning](https://lightning.ai/)
 - Path structure (of pretrained models, dataset) is defined as in our recent project [NOPE](https://github.com/nv-nguyen/nope)
@@ -154,6 +155,18 @@ python train.py machine.batch_size=2 use_augmentation=True name_exp=train_augmen
 
 # experiment 2: change batch_size, using data augmentation, update name_exp, update_lr
 python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_exp=train_augmentation_lr0.001
+```
+
+</details>
+
+ ##  Reproduce quantitative results
+
+<details><summary>Click to expand</summary>
+
+### 1. TLess's objects (object 19-31)
+
+```
+python test.py machine.batch_size=2 use_augmentation=True name_exp=train_augmentation
 ```
 
 </details>

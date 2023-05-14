@@ -10,16 +10,22 @@ from src.dataloader.base import BaseBOP
 import logging
 import cv2
 import os.path as osp
-from src.utils.augmentation import Augmentator, CenterCropRandomResizedCrop, RandomRotation
+from src.utils.augmentation import (
+    Augmentator,
+    CenterCropRandomResizedCrop,
+    RandomRotation,
+)
 from tqdm import tqdm
 from src.poses.utils import (
     get_obj_poses_from_template_level,
     load_index_level0_in_level2,
     crop_frame,
+    adding_inplane_to_pose,
 )
 
 # set level logging
 logging.basicConfig(level=logging.INFO)
+import copy
 
 
 class BOPDataset(BaseBOP):
@@ -31,8 +37,9 @@ class BOPDataset(BaseBOP):
         obj_ids,
         img_size,
         use_augmentation=False,
-        use_random_rotation = False,
-        use_random_scale_translation = False,
+        use_additional_negative_samples_for_training=False,
+        use_random_rotation=False,
+        use_random_scale_translation=False,
         cropping_with_bbox=True,
         reset_metaData=False,
         isTesting=False,
@@ -48,6 +55,9 @@ class BOPDataset(BaseBOP):
         self.use_augmentation = use_augmentation
         self.use_random_rotation = use_random_rotation
         self.use_random_scale_translation = use_random_scale_translation
+        self.use_additional_negative_samples_for_training = (
+            use_additional_negative_samples_for_training
+        )
         self.augmentator = Augmentator()
         self.random_cropper = CenterCropRandomResizedCrop()
         self.random_rotator = RandomRotation()
@@ -98,9 +108,9 @@ class BOPDataset(BaseBOP):
                 transforms.Lambda(lambda mask: torch.from_numpy(mask).unsqueeze(0)),
             ]
         )
-        self.random_rotation_transfrom = transforms.Compose([
-            transforms.RandomRotation(degrees = (-90,90))
-        ])
+        self.random_rotation_transfrom = transforms.Compose(
+            [transforms.RandomRotation(degrees=(-90, 90))]
+        )
         logging.info(
             f"Length of dataloader: {self.__len__()} with mode {self.isTesting} containing objects {np.unique(self.metaData['obj_id'])}"
         )
@@ -132,7 +142,7 @@ class BOPDataset(BaseBOP):
         logging.info(
             f"Subsampled from {len(index_dataframe)} to {len(df)} ({percentage}%) images"
         )
-        return df
+        return df.reset_index(drop=True)
 
     def __len__(self):
         return len(self.metaData)
@@ -185,7 +195,28 @@ class BOPDataset(BaseBOP):
 
     def load_testing_indexes(self):
         self.testing_indexes = load_index_level0_in_level2("all")
-        
+
+    def load_negative_sample_same_obj(self, idx):
+        obj_id = self.metaData.iloc[idx]["obj_id"]
+        selected_idx = np.random.choice(
+            self.metaData[self.metaData.obj_id == obj_id].index
+        )
+        # loading one sample
+        query = self.load_image(selected_idx, type_img="real")
+        template = self.load_image(selected_idx, type_img="synth")
+        bboxes = [
+            self.get_bbox(None, idx=selected_idx),
+            self.get_bbox(template),
+        ]
+
+        [query, template] = self.crop([query, template], bboxes)
+        template_mask = template.getchannel("A")
+        template = template.convert("RGB")
+
+        query = self.rgb_transform(query)
+        template = self.rgb_transform(template)
+        template_mask = self.mask_transform(template_mask)
+        return query, template, template_mask
 
     def __getitem__(self, idx):
         if not self.isTesting:
@@ -202,13 +233,23 @@ class BOPDataset(BaseBOP):
             template_mask = self.mask_transform(template_mask)
 
             if self.use_random_rotation:
-                [query, template, template_mask] = self.random_rotator([query, template, template_mask])
-            # generate a random resized crop parameters
-            return {
+                [query, template, template_mask] = self.random_rotator(
+                    [query, template, template_mask]
+                )
+            sample = {
                 "query": query,
                 "template": template,
                 "template_mask": template_mask,
             }
+            if self.use_additional_negative_samples_for_training:
+                # additional trick for contrast learning: adding samples of same objects (different poses)
+                neg_query, neg_template, neg_mask = self.load_negative_sample_same_obj(
+                    idx
+                )
+                sample["neg_query"] = neg_query
+                sample["neg_template"] = neg_template
+                sample["neg_template_mask"] = neg_mask
+            return sample
         else:
             query_pose = self.metaData.iloc[idx]["pose"]
             obj_id = self.metaData.iloc[idx]["obj_id"]
@@ -248,32 +289,133 @@ class BOPDataset(BaseBOP):
             }
 
 
+class BOPDatasetTest(BOPDataset):
+    def __init__(
+        self,
+        root_dir,
+        template_dir,
+        split,
+        img_size,
+        obj_id,
+        mode,
+        linemod_setting=False,
+        reset_metaData=False,
+        batch_size=None,
+        **kwargs,
+    ):
+        self.root_dir = root_dir
+        self.template_dir = template_dir
+        self.split = split
+        self.obj_id = obj_id
+        self.linemod_setting = linemod_setting
+        self.mode = mode  # query: load only query image, template:load only templates
+        self.img_size = img_size
+        self.mask_size = 25 if img_size == 64 else int(img_size // 8)
+        self.cropping_with_bbox = True
+        self.batch_size = batch_size
+
+        self.load_template_poses(template_dir=template_dir)
+        self.load_testing_indexes()
+        if self.mode == "query":
+            self.load_list_scene(split=split)
+            self.load_metaData(
+                reset_metaData=reset_metaData,
+                mode="query",
+            )
+            self.metaData = self.metaData[self.metaData.obj_id == obj_id]
+        else:
+            self.metaData = {
+                "inplane": np.arange(0, 360, 10).tolist()
+                * self.testing_indexes.shape[0],
+                "idx_template": self.testing_indexes.tolist() * 36,
+            }
+            self.metaData = pd.DataFrame.from_dict(self.metaData, orient="index")
+            self.metaData = self.metaData.transpose()
+
+        self.rgb_transform = transforms.Compose(
+            [
+                transforms.Resize((self.img_size, self.img_size)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        self.mask_transform = transforms.Compose(
+            [
+                transforms.Resize((self.mask_size, self.mask_size)),
+                transforms.Lambda(lambda mask: (np.asarray(mask) / 255.0 > 0) * 1),
+                transforms.Lambda(lambda mask: torch.from_numpy(mask).unsqueeze(0)),
+            ]
+        )
+        self.use_augmentation = False
+        self.use_random_scale_translation = False
+
+    def __len__(self):
+        if self.batch_size == None:
+            return len(self.metaData)
+        else:
+            size = len(self.metaData)
+            size = size - size % self.batch_size
+            return size
+
+    def load_testing_indexes(self):
+        if self.linemod_setting:
+            self.testing_indexes, _ = get_obj_poses_from_template_level(
+                2, "upper", return_index=True
+            )
+        else:
+            self.testing_indexes, _ = get_obj_poses_from_template_level(
+                2, "all", return_index=True
+            )
+
+    def __getitem__(self, idx):
+        if self.mode == "query":
+            query = self.load_image(idx, type_img="real")
+            bboxes = [self.get_bbox(None, idx=idx)]
+            [query] = self.crop([query], bboxes)
+
+            query = self.rgb_transform(query)
+            query_pose = self.metaData.iloc[idx]["pose"]
+            query_pose = torch.from_numpy(np.array(query_pose).reshape(4, 4)[:3, :3])
+            sample = {
+                "query": query,
+                "query_pose": query_pose,
+            }
+        else:
+            idx_template = self.metaData.iloc[idx]["idx_template"]
+            inplane = self.metaData.iloc[idx]["inplane"]
+
+            template_path = osp.join(
+                self.template_dir, f"obj_{self.obj_id:06d}/{idx_template:06d}.png"
+            )
+            template = Image.open(template_path).rotate(inplane)
+            template = template.crop(self.make_bbox_square(template.getbbox()))
+            template_mask = template.getchannel("A")
+            template = template.convert("RGB")
+
+            template = self.rgb_transform(template)
+            template_mask = self.mask_transform(template_mask)
+
+            template_pose = self.templates_poses[idx_template][:3, :3]
+            template_pose = adding_inplane_to_pose(pose=template_pose, inplane=inplane)
+            template_pose = torch.from_numpy(template_pose)
+            sample = {
+                "template": template,
+                "template_mask": template_mask,
+                "template_pose": template_pose,
+            }
+        return sample
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     from torch.utils.data import DataLoader
+    from src.model.loss import GeodesicError
+    from src.dataloader.lm_utils import query_real_ids
+    from torchvision.utils import make_grid, save_image
 
-    root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose-released/datasets"
-    dataset_names = [
-        "hb",
-        # "tudl",
-        # "hope",
-        # "icmi",
-        # "icbin",
-        # "ruapc",
-    ]
-
-    # tless is special
-    # for dataset_name, split in zip(["tless/train"], ["train_primesense"]):
-    #     dataset = BOPDataset(
-    #         root_dir=os.path.join(root_dir, dataset_name),
-    #         template_dir=os.path.join(root_dir, f"templates/tless"),
-    #         split=split,
-    #         obj_ids=None,
-    #         img_size=256,
-    #         use_augmentation=False,
-    #         cropping_with_bbox=True,
-    #         reset_metaData=True,
-    #     )
+    root_dir = "/gpfsscratch/rech/tvi/uyb58rn/datasets/template-pose-released/datasets"
     transform_inverse = transforms.Compose(
         [
             transforms.Normalize(
@@ -282,56 +424,36 @@ if __name__ == "__main__":
             ),
         ]
     )
+    root_dirs = [os.path.join(root_dir, dataset_name) for dataset_name in ["lm"]]
     os.makedirs("./tmp", exist_ok=True)
-    for dataset_name in tqdm(dataset_names):
-        splits = [
-            split
-            for split in os.listdir(os.path.join(root_dir, dataset_name))
-            if os.path.isdir(os.path.join(root_dir, dataset_name, split))
-        ]
-        splits = [
-            split
-            for split in splits
-            if split.startswith("train") or split.startswith("val")
-        ]
-        for split in splits:
-            dataset = BOPDataset(
-                root_dir=os.path.join(root_dir, dataset_name),
-                template_dir=os.path.join(root_dir, f"templates/{dataset_name}"),
-                split=split,
-                obj_ids=None,
-                img_size=256,
-                cropping_with_bbox=True,
-                reset_metaData=False,
-                use_augmentation=True,
-                use_random_scale_translation=True,
-                use_random_rotation=True,
-                isTesting=False,
-            )
-            # train_data = DataLoader(
-            #     dataset, batch_size=16, shuffle=False, num_workers=10
-            # )
-            # train_size, train_loader = len(train_data), iter(train_data)
-            # for idx in tqdm(range(train_size)):
-            #     batch = next(train_loader)
-            #     if idx >= 500:
-            #         break
-            # logging.info(f"{dataset_name} is running correctly!")
-            for idx in range(len(dataset)):
-                sample = dataset[idx]
-                # for k in sample:
-                #     print(k, sample[k].shape)
-                # break
-                query = transform_inverse(sample["query"])
-                template = transform_inverse(sample["template"])
-                query = query.permute(1, 2, 0).numpy()
-                query = Image.fromarray(np.uint8(query * 255))
-                query.save(f"./tmp/{dataset_name}_{split}_{idx}_query.png")
-                template = template.permute(1, 2, 0).numpy()
-                template = Image.fromarray(np.uint8(template * 255))
-                template.save(f"./tmp/{dataset_name}_{split}_{idx}_template.png")
-                mask = sample["template_mask"].permute(1, 2, 0).numpy()[:, :, 0]
-                mask = Image.fromarray(np.uint8(mask * 255))
-                mask.save(f"./tmp/{dataset_name}_{split}_{idx}_mask.png")
-                if idx == 10:
-                    break
+    for idx_dataset in range(len(root_dirs)):
+        for obj_id in query_real_ids:
+            for mode in ["query", "template"]:
+                dataset = BOPDatasetTest(
+                    root_dir=root_dirs[idx_dataset],
+                    template_dir=os.path.join(root_dir, f"templates_pyrender/lm"),
+                    split="test",
+                    obj_id=obj_id + 1,
+                    img_size=256,
+                    reset_metaData=True,
+                    linemod_setting=True,
+                    mode=mode,
+                )
+
+                train_data = DataLoader(
+                    dataset, batch_size=16, shuffle=True, num_workers=8
+                )
+                train_size, train_loader = len(train_data), iter(train_data)
+                logging.info(f"object {obj_id+1}, mode {mode}, length {train_size}")
+                for idx in tqdm(range(train_size)):
+                    batch = next(train_loader)
+                    save_image_path = os.path.join(f"./tmp/obj{obj_id+1}_{mode}_batch{idx}.png")
+                    rgb = batch[mode]
+                    save_image(
+                        transform_inverse(rgb),
+                        save_image_path,
+                        nrow=4,
+                    )
+                    print(save_image_path)
+                    if idx == 2:
+                        break

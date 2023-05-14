@@ -19,7 +19,7 @@ query_name_to_real_id = {
 }
 query_names = np.asarray([k for k in query_name_to_real_id.keys()])
 query_real_ids = np.asarray([v for v in query_name_to_real_id.values()])
-
+query_symmetry = [0, 0, 2, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
 occlusion_query_name_to_real_id = {
     "ape": 0,
     "can": 4,

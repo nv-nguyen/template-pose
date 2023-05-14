@@ -9,11 +9,11 @@ source:
   processing: 
 
 dataloader:
-  _target_: src.dataloader.bop.LINEMOD
+  _target_: src.dataloader.bop.BOPDatasetTest
   root_dir: ${machine.root_dir}/datasets/lm
-  template_dir: ${machine.root_dir}/datasets/templates_pyrender/linemod
-  split_name: ${split_name}
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/lm
+  split_name: test
   reset_metaData: True
-  mode:
   img_size: 256
-  cropping_with_bbox: True
+  obj_ids:
+  linemod_setting: True

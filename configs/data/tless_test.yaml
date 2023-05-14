@@ -7,3 +7,12 @@ source:
   unzip_mode: unzip
   processing:
 
+dataloader:
+  _target_: src.dataloader.bop.BOPDatasetTest
+  root_dir: ${machine.root_dir}/datasets/tless/test
+  template_dir: ${machine.root_dir}/datasets/templates_pyrender/tless
+  split_name: test
+  reset_metaData: True
+  img_size: 256
+  obj_ids:
+  linemod_setting: False

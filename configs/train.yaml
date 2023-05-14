@@ -13,6 +13,7 @@ use_pretrained: True
 use_augmentation: True
 use_random_rotation: False
 use_random_scale_translation: True
+use_additional_negative_samples_for_training: False
 train_datasets:
   - tless_train
   - hb 
@@ -23,5 +24,4 @@ train_datasets:
   - tudl
 test_datasets:
   - lm 
-  - olm
   - tless_test
