@@ -15,6 +15,7 @@ from src.utils.augmentation import (
     CenterCropRandomResizedCrop,
     RandomRotation,
 )
+from src.utils.inout import get_root_project, load_json
 from tqdm import tqdm
 from src.poses.utils import (
     get_obj_poses_from_template_level,
@@ -323,6 +324,34 @@ class BOPDatasetTest(BOPDataset):
                 mode="query",
             )
             self.metaData = self.metaData[self.metaData.obj_id == obj_id]
+            self.metaData.reset_index(inplace=True)
+            if not self.linemod_setting:
+                init_size = len(self.metaData)
+                root_project = get_root_project()
+                # for tless setting, we subsample the dataset by taking only images from metaData
+                with open(
+                    f"{root_project}/src/dataloader/tless_bop19_test_list.json"
+                ) as json_file:
+                    bop19_test_list = json.load(json_file)
+                bop19_test_list = pd.DataFrame.from_dict(
+                    bop19_test_list, orient="index"
+                )
+                bop19_test_list = bop19_test_list.transpose()
+                selected_frames = np.zeros(len(self.metaData), dtype=bool)
+                for i in tqdm(
+                    range(len(self.metaData)), desc="Subsampling MetaData..."
+                ):
+                    idx_data = [
+                        int(self.metaData.iloc[i]["scene_id"]),
+                        self.metaData.iloc[i]["frame_id"],
+                    ]
+                    selected_frames[i] = (bop19_test_list == idx_data).all(1).any()
+                self.metaData = self.metaData[selected_frames]
+                self.metaData.reset_index(inplace=True)
+                logging.info(
+                    f"Subsampling from size {init_size} to size {len(self.metaData)} by taking only images of BOP"
+                )
+
         else:
             self.metaData = {
                 "inplane": np.arange(0, 360, 10).tolist()
@@ -331,6 +360,7 @@ class BOPDatasetTest(BOPDataset):
             }
             self.metaData = pd.DataFrame.from_dict(self.metaData, orient="index")
             self.metaData = self.metaData.transpose()
+        logging.info(f"Length of dataset: {self.__len__()}")
 
         self.rgb_transform = transforms.Compose(
             [
@@ -376,12 +406,19 @@ class BOPDatasetTest(BOPDataset):
             [query] = self.crop([query], bboxes)
 
             query = self.rgb_transform(query)
-            query_pose = self.metaData.iloc[idx]["pose"]
-            query_pose = torch.from_numpy(np.array(query_pose).reshape(4, 4)[:3, :3])
+            pose = self.metaData.iloc[idx]["pose"]
+            query_pose = torch.from_numpy(np.array(pose).reshape(4, 4)[:3, :3])
             sample = {
                 "query": query,
                 "query_pose": query_pose,
             }
+            if not self.linemod_setting:
+                intrinsic = np.array(self.metaData.iloc[idx]["intrinsic"]).reshape(3, 3)
+                depth_path = self.metaData.iloc[idx]["depth_path"]
+                query_translation = np.array(pose).reshape(4, 4)[:3, 3]
+                sample["intrinsic"] = torch.from_numpy(intrinsic)
+                sample["depth_path"] = depth_path
+                sample["query_translation"] = torch.from_numpy(query_translation)
         else:
             idx_template = self.metaData.iloc[idx]["idx_template"]
             inplane = self.metaData.iloc[idx]["inplane"]
@@ -390,6 +427,7 @@ class BOPDatasetTest(BOPDataset):
                 self.template_dir, f"obj_{self.obj_id:06d}/{idx_template:06d}.png"
             )
             template = Image.open(template_path).rotate(inplane)
+            template_bbox = template.getbbox()
             template = template.crop(self.make_bbox_square(template.getbbox()))
             template_mask = template.getchannel("A")
             template = template.convert("RGB")
@@ -404,6 +442,7 @@ class BOPDatasetTest(BOPDataset):
                 "template": template,
                 "template_mask": template_mask,
                 "template_pose": template_pose,
+                # "template_bbox": torch.from_numpy(template_bbox),
             }
         return sample
 
@@ -424,35 +463,39 @@ if __name__ == "__main__":
             ),
         ]
     )
-    root_dirs = [os.path.join(root_dir, dataset_name) for dataset_name in ["lm"]]
+    root_dirs = [
+        os.path.join(root_dir, dataset_name) for dataset_name in ["tless/test"]
+    ]
     os.makedirs("./tmp", exist_ok=True)
     for idx_dataset in range(len(root_dirs)):
-        for obj_id in query_real_ids:
+        for obj_id in range(1, 31):
             for mode in ["query", "template"]:
                 dataset = BOPDatasetTest(
                     root_dir=root_dirs[idx_dataset],
-                    template_dir=os.path.join(root_dir, f"templates_pyrender/lm"),
-                    split="test",
-                    obj_id=obj_id + 1,
+                    template_dir=os.path.join(root_dir, f"templates_pyrender/tless"),
+                    split="test_primesense",
+                    obj_id=obj_id,
                     img_size=256,
-                    reset_metaData=True,
-                    linemod_setting=True,
+                    reset_metaData=False,
+                    linemod_setting=False,
                     mode=mode,
                 )
 
                 train_data = DataLoader(
-                    dataset, batch_size=16, shuffle=True, num_workers=8
+                    dataset, batch_size=36, shuffle=True, num_workers=8
                 )
                 train_size, train_loader = len(train_data), iter(train_data)
-                logging.info(f"object {obj_id+1}, mode {mode}, length {train_size}")
+                logging.info(f"object {obj_id}, mode {mode}, length {train_size}")
                 for idx in tqdm(range(train_size)):
                     batch = next(train_loader)
-                    save_image_path = os.path.join(f"./tmp/obj{obj_id+1}_{mode}_batch{idx}.png")
+                    save_image_path = os.path.join(
+                        f"./tmp/obj{obj_id}_{mode}_batch{idx}.png"
+                    )
                     rgb = batch[mode]
                     save_image(
                         transform_inverse(rgb),
                         save_image_path,
-                        nrow=4,
+                        nrow=6,
                     )
                     print(save_image_path)
                     if idx == 2:

@@ -27,10 +27,13 @@ If you like this project, check out related works from our group:
 (3DV 2022)](https://github.com/nv-nguyen/pizza)
 - [BOP visualization toolkit](https://github.com/nv-nguyen/bop_viz_kit)
 
+<p align="center">
+  <img src=./media/qualitative.gif width="80%"/>
+</p>
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
-- Cropping in LINEMOD settings are done with input bounding boxes
+- Cropping in LINEMOD settings is done with input bounding boxes (there is also predicted in-plane rotation)
 - Releasing synthetic templates with Pyrender for faster rendering 
 - Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/datasets/)
 - Adding code to generate poses (OpenCV coordinate) from icosahedron with Blender
@@ -159,14 +162,20 @@ python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_e
 
 </details>
 
- ##  Reproduce quantitative results
+ ##  Reproduce quantitative results (all testing objects are unseen during training) :heavy_check_mark:
 
 <details><summary>Click to expand</summary>
 
 ### 1. LINEMOD's objects
 
 ```
-python test_lm.py name_exp=test_lm
+python test_lm.py name_exp=test_lm model.checkpoint_path=$CHECKPOINT_PATH
+```
+
+### 2. TLESS's objects
+
+```
+python test_tless.py name_exp=test_tless model.checkpoint_path=$CHECKPOINT_PATH
 ```
 
 </details>

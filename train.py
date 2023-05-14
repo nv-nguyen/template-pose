@@ -72,7 +72,7 @@ def train(cfg: DictConfig):
         ]
         assert len(splits) == 1, f"Found {splits} train splits for {data_name}"
         split = splits[0]
-        config_dataloader.reset_metaData = False
+        config_dataloader.reset_metaData = True
         config_dataloader.split = split
         config_dataloader.isTesting = True
         val_dataloader = DataLoader(

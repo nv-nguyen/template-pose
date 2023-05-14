@@ -14,7 +14,7 @@ from src.poses.vsd_utils import (
 import logging
 import cv2
 import os
-
+import numpy as np
 import os
 from PIL import Image
 
@@ -57,6 +57,7 @@ def pyrenderer(
 
 def vsd_obj(
     idx_frame,
+    mesh,
     list_frame_data,
     delta_vsd=15,
     tau_vsd=20,
@@ -64,17 +65,15 @@ def vsd_obj(
     use_gt_translation=True,
 ):
     # read frame data
-    frame_data = list_frame_data[idx_frame]
-    mesh = frame_data["mesh"]
-    # mesh = trimesh.load_mesh(frame_data["cad_path"])
-    # mesh = pyrender.Mesh.from_trimesh(mesh)
-    # print("Loading mesh done!")
-    cam_K = np.array(frame_data["intrinsic"]).reshape(3, 3)
-
-    depth_test = cv2.imread(frame_data["depth_path"], -1) / 10.0
+    cam_K = np.array(list_frame_data["intrinsic"][idx_frame]).reshape(3, 3)
+    depth_path = list_frame_data["depth_path"][idx_frame]
+    depth_test = cv2.imread(depth_path, -1)
+    depth_test = np.array(depth_test)
+    assert depth_test is not None, f"depth image {depth_path} is None"
+    depth_test = depth_test/10.0
     image_size = depth_test.shape
-    pred_poses = np.array(frame_data["pred_poses"]).reshape(-1, 4, 4)
-    gt_poses = np.array(frame_data["query_pose"]).reshape(4, 4)
+    pred_poses = np.array(list_frame_data["pred_poses"][idx_frame]).reshape(-1, 4, 4)
+    gt_poses = np.array(list_frame_data["query_pose"][idx_frame]).reshape(4, 4)
     gt_poses = np.tile(gt_poses[None, ...], (pred_poses.shape[0], 1, 1))
     renderer = partial(
         pyrenderer,

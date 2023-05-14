@@ -9,6 +9,12 @@ import os
 import wandb
 import torchvision.transforms as transforms
 from src.model.loss import GeodesicError
+import multiprocessing
+from src.poses.vsd import vsd_obj
+from functools import partial
+import time
+from tqdm import tqdm
+import numpy as np
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -406,38 +412,95 @@ class BaseFeatureExtractor(pl.LightningModule):
             query = batch["query"]
             query_pose = batch["query_pose"]
             feature_query = self.forward(query)
-            return {
+            samples = {
                 "query": F.interpolate(
                     query, (64, 64), mode="bilinear", align_corners=False
                 ),
                 "feature_query": feature_query,
                 "query_pose": query_pose,
             }
+            # loading additional metric for VSD metric
+            if "intrinsic" in batch:
+                samples["intrinsic"] = batch["intrinsic"]
+                samples["depth_path"] = batch["depth_path"]
+                samples["query_translation"] = batch["query_translation"]
+            return samples
+
+    def get_vsd(
+        self,
+        predR,
+        gtR,
+        query_translation,
+        intrinsic,
+        depth_path,
+        save_path,
+        pred_bbox=None,
+        gt_bbox=None,
+    ):
+        pool = multiprocessing.Pool(processes=self.trainer.num_workers)
+
+        # to calculate vsd, it requires: GT, predicted pose, intrinsic, depth map and CAD model
+        data = {}
+        data["intrinsic"] = intrinsic.cpu().numpy()
+        data["depth_path"] = depth_path
+
+        pred_poses = torch.zeros((predR.shape[0], 1, 4, 4), device=predR.device)
+        pred_poses[:, :, 3, 3] = 1
+        pred_poses[:, 0, :3, :3] = predR
+        # it requries pred_bbox to calculate predicted translation, otherwise using GT translation
+        if pred_bbox is None:
+            pred_poses[:, 0, :3, 3] = query_translation
+        else:
+            raise NotImplementedError
+        data["pred_poses"] = pred_poses.cpu().numpy()
+
+        gt_poses = torch.cat((gtR, query_translation.unsqueeze(2)), dim=2)
+        gt_poses = torch.cat(
+            (gt_poses, torch.zeros((predR.shape[0], 1, 4), device=predR.device)), dim=1
+        )
+        gt_poses[:, 3, 3] = 1.0
+        data["query_pose"] = gt_poses.cpu().numpy()
+
+        vsd_obj_from_index = partial(
+            vsd_obj, list_frame_data=data, mesh=self.testing_cad
+        )
+        start_time = time.time()
+        vsd_error = list(
+            tqdm(
+                pool.imap_unordered(vsd_obj_from_index, range(len(data["query_pose"]))),
+                total=len(data["query_pose"]),
+            )
+        )
+        vsd_error = np.stack(vsd_error, axis=0)  # Bxk where k is top k retrieved
+        np.save(save_path, vsd_error)
+        finish_time = time.time()
+        logging.info(
+            f"Total time to render at rank {self.global_rank}: {finish_time - start_time}",
+        )
+        final_scores = {}
+        for k in [1]:
+            best_vsd = np.min(vsd_error[:, :k], 1)
+            final_scores[f"top {k}, vsd_median"] = np.median(best_vsd)
+            for threshold in [0.15, 0.3, 0.45]:
+                vsd_acc = (best_vsd <= threshold) * 100.0
+                # same for median
+                final_scores[f"top {k}, vsd_scores {threshold}"] = np.mean(vsd_acc)
+        return final_scores
 
     def test_epoch_end(self, test_step_outputs):
-        if self.metric_eval == "geodesic":
-            return self.test_epoch_end_geodesic(self, test_step_outputs)
-
-    def test_epoch_end_geodesic(self, test_step_outputs):
         data = {}
         # collect template from all devices
-        test_step_outputs = self.all_gather(test_step_outputs)
         for idx_batch in range(len(test_step_outputs)):
             if "feature_template" in test_step_outputs[idx_batch]:
-                for idx_device in range(
-                    len(test_step_outputs[idx_batch]["feature_template"])
-                ):
-                    for name in [
-                        "template",
-                        "feature_template",
-                        "template_pose",
-                        "template_mask",
-                    ]:
-                        if name not in data:
-                            data[name] = []
-                        data[name].append(
-                            test_step_outputs[idx_batch][name][idx_device]
-                        )
+                for name in [
+                    "template",
+                    "feature_template",
+                    "template_pose",
+                    "template_mask",
+                ]:
+                    if name not in data:
+                        data[name] = []
+                    data[name].append(test_step_outputs[idx_batch][name])
         # concat template
         for name in ["template", "feature_template", "template_pose", "template_mask"]:
             data[name] = torch.cat(data[name], dim=0)
@@ -448,44 +511,66 @@ class BaseFeatureExtractor(pl.LightningModule):
                 query = test_step_outputs[idx_batch]["query"]
                 feature_query = test_step_outputs[idx_batch]["feature_query"]
                 query_pose = test_step_outputs[idx_batch]["query_pose"]
-                for idx_device in range(len(feature_query)):
-                    # get best template
-                    matrix_sim = self.calculate_similarity_for_search(
-                        feature_query[idx_device],
-                        data["feature_template"],
-                        data["template_mask"],
-                        training=False,
-                    )
-                    weight_sim, pred_index = matrix_sim.topk(k=1)
-                    pred_pose = data["template_pose"][pred_index.reshape(-1)]
-                    pred_template = data["template"][pred_index.reshape(-1)]
+                # get best template
+                matrix_sim = self.calculate_similarity_for_search(
+                    feature_query,
+                    data["feature_template"],
+                    data["template_mask"],
+                    training=False,
+                )
+                weight_sim, pred_index = matrix_sim.topk(k=1)
+                pred_pose = data["template_pose"][pred_index.reshape(-1)]
+                pred_template = data["template"][pred_index.reshape(-1)]
 
-                    # calculate the scores
+                # calculate the scores depending on metric used
+                if self.metric_eval == "geodesic":
                     error, acc = self.metric(
                         predR=pred_pose,
-                        gtR=query_pose[idx_device],
+                        gtR=query_pose,
                         symmetry=torch.ones(
-                            query_pose[idx_device].shape[0], device=self.device
+                            query_pose.shape[0], device=self.device
                         ).long()
                         * self.obj_symmetry,
                     )
-
-                    # visualize prediction
-                    vis_imgs = [
-                        self.transform_inverse(query[idx_device]),
-                        self.transform_inverse(pred_template),
-                    ]
-                    vis_imgs, ncol = put_image_to_grid(vis_imgs)
-                    save_image_path = os.path.join(
-                        self.log_dir,
-                        f"retrieved_test_step{self.global_step}_rank{self.global_rank}.png",
+                    np.save(os.path.join(
+                            self.log_dir, f"geodesic_obj_{self.obj_id}_batch{idx_batch}.npy"
+                        ), error.cpu().numpy())
+                elif self.metric_eval == "vsd":
+                    acc = self.get_vsd(
+                        predR=pred_pose,
+                        gtR=query_pose,
+                        query_translation=test_step_outputs[idx_batch][
+                            "query_translation"
+                        ],
+                        intrinsic=test_step_outputs[idx_batch]["intrinsic"],
+                        depth_path=test_step_outputs[idx_batch]["depth_path"],
+                        save_path=os.path.join(
+                            self.log_dir, f"vsd_obj_{self.obj_id}_batch{idx_batch}.npy"
+                        ),
                     )
-                    save_image(
-                        vis_imgs,
-                        save_image_path,
-                        nrow=ncol * 4,
-                    )
-                    self.logger.experiment.log(
-                        {f"retrieval/linemod": wandb.Image(save_image_path)},
-                    )
-                self.monitoring_score(dict_scores=acc, split_name=f"linemod")
+                self.monitoring_score(
+                    dict_scores=acc,
+                    split_name=f"{self.dataset_name}_obj_{self.obj_id}",
+                )
+                # visualize prediction
+                vis_imgs = [
+                    self.transform_inverse(query),
+                    self.transform_inverse(pred_template),
+                ]
+                vis_imgs, ncol = put_image_to_grid(vis_imgs)
+                save_image_path = os.path.join(
+                    self.log_dir,
+                    f"retrieved_test_step{self.global_step}_rank{self.global_rank}.png",
+                )
+                save_image(
+                    vis_imgs,
+                    save_image_path,
+                    nrow=ncol * 4,
+                )
+                self.logger.experiment.log(
+                    {
+                        f"retrieval/{self.dataset_name}_obj_{self.obj_id}": wandb.Image(
+                            save_image_path
+                        )
+                    },
+                )

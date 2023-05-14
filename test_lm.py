@@ -11,6 +11,8 @@ import pytorch_lightning as pl
 from src.utils.dataloader import concat_dataloader
 from torch.utils.data import ConcatDataset
 from src.dataloader.lm_utils import query_real_ids, query_symmetry
+import glob
+import numpy as np
 
 pl.seed_everything(2022)
 # set level logging
@@ -43,7 +45,9 @@ def test(cfg: DictConfig):
         cfg.machine.trainer.devices = num_gpus
         cfg.machine.trainer.num_nodes = num_nodes
         logging.info(f"Slurm config: {num_gpus} gpus,  {num_nodes} nodes")
+
     num_devices = cfg.machine.trainer.devices
+    cfg.machine.trainer.devices = [0]  # testing run only on single gpu
     trainer = instantiate(cfg.machine.trainer)
     logging.info(f"Trainer initialized")
 
@@ -60,7 +64,7 @@ def test(cfg: DictConfig):
         test_datasets = []
         for mode in ["query", "template"]:
             config_dataloader = cfg.data.lm.dataloader
-            config_dataloader.reset_metaData = False
+            config_dataloader.reset_metaData = True
             config_dataloader.split = "test"
             config_dataloader.obj_id = int(obj_id + 1)
             config_dataloader.mode = mode
@@ -86,13 +90,26 @@ def test(cfg: DictConfig):
         )
         logging.info(f"Testing object {obj_id+1}: test_size={len(test_dataloaders)}...")
         model.obj_symmetry = query_symmetry[obj_id]
+        model.obj_id = obj_id
         model.metric_eval = "geodesic"
+        model.dataset_name = "linemod"
         trainer.test(
             model,
             dataloaders=test_dataloaders,
             ckpt_path=cfg.model.checkpoint_path,
         )
         logging.info(f"---" * 20)
+
+    # calculatin mean geodesic
+    result_dir = model.log_dir
+    geodesic_files = glob.glob(f"{result_dir}/geodesic*.npy")
+    list_geodesic = []
+    for geodesic_file in geodesic_files:
+        geodesic = np.load(geodesic_file)
+        list_geodesic.append(geodesic)
+    geodesic = np.stack(list_geodesic, axis=0)
+    geodesic_acc = (geodesic <= 15) * 100.0
+    logging.info(f"Geodesic: {geodesic_acc.mean():.2f} %")
 
 
 if __name__ == "__main__":
