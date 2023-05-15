@@ -139,7 +139,7 @@ If everything is fine, here are the number of images that you should get:
 
 <details><summary>Click to expand</summary>
 
-### 0. (Optional) We use pretrained weight from MoCo v2. You can download it from [here]() or run:
+### 0. (Optional) We use pretrained weight from MoCo v2. You can download it from [here](https://drive.google.com/file/d/1DwlMVdj7rPh3TZ2QfKDU4t4460gofm7i/view?usp=share_link) or run:
 
 ```
 python -m src.scripts.download_moco_weights
@@ -165,11 +165,19 @@ Please check out this [training loggers](https://api.wandb.ai/links/nv-nguyen/8h
 
 </details>
 
- ##  Reproduce quantitative results 
+##  Reproduce quantitative results 
 
 Please note that all testing objects are unseen during training!
 
 <details><summary>Click to expand</summary>
+
+### 0. You can download it from [here]() or run:
+
+```
+python -m src.scripts.download_checkpoint
+```
+
+TODO: This is not the final checkpoint. We will update it soon.
 
 ### 1. LINEMOD's objects
 
@@ -187,6 +195,12 @@ Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose
 
 </details>
 
+##  Inference on custom objects (WIP)
+
+```
+python gradio.py
+```
+
 ## Acknowledgement
 
 The code is adapted from [Nope](https://github.com/nv-nguyen/nope), [Temos](https://github.com/Mathux/Temos), [PoseContrast](https://github.com/YoungXIAO13/PoseContrast), [CosyPose](https://github.com/ylabbe/cosypose) and [BOP Toolkit](https://github.com/thodan/bop_toolkit). 
@@ -197,6 +211,7 @@ The authors thank Martin Sundermeyer, Paul Wohlhart and Shreyas Hampali for thei
 If you have any question, feel free to create an issue or contact the first author at van-nguyen.nguyen@enpc.fr
 
 ##  TODO
+- Update checkpoints
 - Tutorial of training/testing on custom datasets
 - Gradio demo with similarity visualization
 - Release universal pretrained models

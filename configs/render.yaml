@@ -12,3 +12,4 @@ custom_blender_path:
 
 url_preRendered_templates: https://drive.google.com/file/d/16vUaQUFi3EJeUOWT-bwsDHPkWRimfLiV/view?usp=sharing
 url_moco_weights:  https://drive.google.com/file/d/1DwlMVdj7rPh3TZ2QfKDU4t4460gofm7i/view?usp=share_link # TODO: should not put it here 
+url_template_pose_checkpoint: https://drive.google.com/file/d/1eRSXxELC71cQFTttXBEenb5NUJ5ciSIW/view?usp=sharing # TODO: should not put it here
