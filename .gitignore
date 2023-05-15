@@ -1,4 +1,5 @@
 # Additional 
+pytorch3d/
 configs/user/nguyen.yaml
 sync_wandb.sh
 .hydra/

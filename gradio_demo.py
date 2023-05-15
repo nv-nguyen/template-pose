@@ -8,7 +8,7 @@ import os
 
 
 WEBSITE = """
-<h1 style='text-align: center'>Templates for 3D Object Pose Estimation Revisited: : <br>
+<h1 style='text-align: center'>Templates for 3D Object Pose Estimation Revisited: <br>
                 Generalization to New Objects and Robustness to Occlusions</br> </h1>
 
 <h3 style='text-align: center'>
@@ -20,7 +20,7 @@ WEBSITE = """
 </h3>
 
 <h3 style='text-align: center'>
-<nobr>arXiv 2023</nobr>
+<nobr>CVPR 2022</nobr>
 </h3>
 
 <h3 style="text-align:center;">
@@ -35,20 +35,6 @@ This space illustrates <a href='https://nv-nguyen.github.io/template-pose' targe
 </p>
 </h3>
 """
-
-
-def get_examples(dir):
-    name_example = [
-        os.path.join(dir, f)
-        for f in os.listdir(dir)
-        if os.path.isdir(os.path.join(dir, f))
-    ]
-    examples = []  # reference, query, num_neighbors
-    for name in name_example:
-        query_path = os.path.join(name, "query.png")
-        reference_path = os.path.join(name, "reference.png")
-        examples.append([reference_path, query_path])
-    return examples
 
 
 def main(model, device, cam_vis, reference_image, query_image, num_neighbors):
@@ -73,25 +59,23 @@ def main(model, device, cam_vis, reference_image, query_image, num_neighbors):
 
 def run_demo():
     inputs = [
-        gr.Image(label="reference", type="pil", image_mode="RGB"),
-        gr.Image(label="query", type="pil", image_mode="RGB"),
+        gr.Image(label="query image", type="pil", image_mode="RGB"),
+        gr.Textbox(label="CAD model", lines=2, placeholder="Path to CAD model (i.e /home/nguyen/Documents/obj_000001.ply"),
         gr.Slider(0, 5, value=3, step=1, label="Number of neighbors to show"),
     ]
     vis_output = gr.Plot(label="Predictions")
-    neighbors_output = gr.Image(label="Pose ditribution", type="pil", image_mode="RGBA")
+    neighbors_output = gr.Image(label="Nearest neighbor", type="pil", image_mode="RGBA")
 
     cam_vis = CameraVisualizer(vis_output)
     fn_with_model = partial(main, None, None, cam_vis)
     fn_with_model.__name__ = "fn_with_model"
 
-    examples = get_examples(dir="media/demo")
     demo = gr.Interface(
         fn=fn_with_model,
         title=WEBSITE,
         inputs=inputs,
         outputs=[vis_output, neighbors_output],
         allow_flagging="never",
-        examples=examples,
         cache_examples=True,
     )
     demo.launch(share=True)

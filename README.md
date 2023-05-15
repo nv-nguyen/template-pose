@@ -78,6 +78,10 @@ This repository is running with the Weight and Bias logger. Ensure that you upda
 ```
 conda env create -f environment.yml
 conda activate template
+
+# require only for evaluation: pytorch3d 0.7.0
+git clone https://github.com/facebookresearch/pytorch3d.git
+python -m pip install -e .
 ```
 
 ### 2. Datasets
@@ -198,8 +202,9 @@ Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose
 ##  Inference on custom objects (WIP)
 
 ```
-python gradio.py
+python gradio_demo.py
 ```
+![Demo](./media/gradio_interface.png)
 
 ## Acknowledgement
 
