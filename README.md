@@ -33,6 +33,7 @@ If you like this project, check out related works from our group:
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
+- Adding wandb logger: [training loggers](https://api.wandb.ai/links/nv-nguyen/8hkk35s4), [testing loggers](https://wandb.ai/nv-nguyen/template-pose-released/reports/Visualizations-of-template-pose--Vmlldzo0MzY0NDI2?accessToken=hyet783s3ujnbtvmqda71q2nv8haira63f5n23c3fhorb1oe949qmehucplaxfd8)
 - Cropping in LINEMOD settings is done with input bounding boxes (there is also predicted in-plane rotation)
 - Releasing synthetic templates with Pyrender for faster rendering 
 - Releasing ready-to-use universal model pretrained on different datasets of BOP challenge [HomebrewedDB, HOPE, RU-APC, IC-BIN, IC-MI, TUD-L, T-LESS](https://bop.felk.cvut.cz/datasets/)
@@ -160,6 +161,8 @@ python train.py machine.batch_size=2 use_augmentation=True name_exp=train_augmen
 python train.py machine.batch_size=2 use_augmentation=True model.lr=0.001 name_exp=train_augmentation_lr0.001
 ```
 
+Please check out this [training loggers](https://api.wandb.ai/links/nv-nguyen/8hkk35s4) to visualize how the training loss looks like.
+
 </details>
 
  ##  Reproduce quantitative results 
@@ -179,6 +182,8 @@ python test_lm.py name_exp=test_lm model.checkpoint_path=$CHECKPOINT_PATH
 ```
 python test_tless.py name_exp=test_tless model.checkpoint_path=$CHECKPOINT_PATH
 ```
+
+Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose-released/reports/Visualizations-of-template-pose--Vmlldzo0MzY0NDI2?accessToken=hyet783s3ujnbtvmqda71q2nv8haira63f5n23c3fhorb1oe949qmehucplaxfd8) to visualize how the training loss looks like.
 
 </details>
 
