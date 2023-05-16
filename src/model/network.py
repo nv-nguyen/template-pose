@@ -15,9 +15,6 @@ from torchvision import transforms, utils
 import logging
 
 os.environ["MPLCONFIGDIR"] = os.getcwd() + "./tmp/"
-import matplotlib.pyplot as plt
-from PIL import Image
-import wandb
 from src.model.loss import GeodesicError
 
 
