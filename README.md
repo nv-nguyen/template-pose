@@ -1,15 +1,30 @@
-## template-pose (CVPR 2022) <br><sub>Official PyTorch implementation </sub>
+<div align="center">
+<h2>
+Templates for 3D Object Pose Estimation Revisited:<br>  Generalization to New objects and Robustness to Occlusions
+<p></p>
 
-![Teaser image](./media/method.png)
+<a href="https://nv-nguyen.github.io/" target="_blank"><nobr>Van Nguyen Nguyen</nobr></a> &emsp;
+<a href="https://yinlinhu.github.io/" target="_blank"><nobr>Yinlin Hu</nobr></a> &emsp;
+<a href="Yang Xiao" target="_blank"><nobr>Yang Xiao</nobr></a> &emsp;
+<a href="https://people.epfl.ch/mathieu.salzmann" target="_blank"><nobr>Mathieu Salzmann</nobr></a> &emsp;
+<a href="https://vincentlepetit.github.io/" target="_blank"><nobr>Vincent Lepetit</nobr></a>
 
-**Templates for 3D Object Pose Estimation Revisited: Generalization to New objects and Robustness to Occlusions**<br>
-[Van Nguyen Nguyen](https://nv-nguyen.github.io/), 
-[Yinlin Hu](https://yinlinhu.github.io/), 
-[Yang Xiao](https://youngxiao13.github.io/), 
-[Mathieu Salzmann](https://people.epfl.ch/mathieu.salzmann) and 
-[Vincent Lepetit](https://vincentlepetit.github.io/) <br>
-**[Paper](https://openaccess.thecvf.com/content/CVPR2022/papers/Nguyen_Templates_for_3D_Object_Pose_Estimation_Revisited_Generalization_to_New_CVPR_2022_paper.pdf)
-, [Project Page](https://nv-nguyen.github.io/template-pose/)**
+<p></p>
+
+<a href="https://nv-nguyen.github.io/template-pose/"><img 
+src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" height=35em></a>
+<a href="https://arxiv.org/abs/2203.17234"><img 
+src="https://img.shields.io/badge/-Paper-blue.svg?colorA=333&logo=arxiv" height=35em></a>
+<a href="https://colab.research.google.com/drive/18Si4X7fcKFHvFuMS-FRVkDyTvlOsr78H?usp=sharing"><img 
+src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" height=35em></a>
+<p></p>
+
+<p align="center">
+  <img src=./media/qualitative.gif width="80%"/>
+</p>
+
+</h2>
+</div>
 
 If our project is helpful for your research, please consider citing : 
 ``` Bash
@@ -27,9 +42,7 @@ If you like this project, check out related works from our group:
 (3DV 2022)](https://github.com/nv-nguyen/pizza)
 - [BOP visualization toolkit](https://github.com/nv-nguyen/bop_viz_kit)
 
-<p align="center">
-  <img src=./media/qualitative.gif width="80%"/>
-</p>
+![Teaser image](./media/method.png)
 
 ##  Updates (WIP)
 We have introduced additional features and updates to the codebase:
@@ -208,7 +221,7 @@ python gradio_demo.py
 
 ## Acknowledgement
 
-The code is adapted from [Nope](https://github.com/nv-nguyen/nope), [Temos](https://github.com/Mathux/Temos), [PoseContrast](https://github.com/YoungXIAO13/PoseContrast), [CosyPose](https://github.com/ylabbe/cosypose) and [BOP Toolkit](https://github.com/thodan/bop_toolkit). 
+The code is adapted from [Nope](https://github.com/nv-nguyen/nope), [Temos](https://github.com/Mathux/Temos), [Unicorn](https://github.com/monniert/unicorn), [PoseContrast](https://github.com/YoungXIAO13/PoseContrast), [CosyPose](https://github.com/ylabbe/cosypose) and [BOP Toolkit](https://github.com/thodan/bop_toolkit). 
 
 The authors thank Martin Sundermeyer, Paul Wohlhart and Shreyas Hampali for their fast reply, feedback!
 

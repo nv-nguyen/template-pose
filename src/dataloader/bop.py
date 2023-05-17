@@ -454,7 +454,7 @@ if __name__ == "__main__":
     from src.dataloader.lm_utils import query_real_ids
     from torchvision.utils import make_grid, save_image
 
-    root_dir = "/gpfsscratch/rech/tvi/uyb58rn/datasets/template-pose-released/datasets"
+    root_dir = "/home/nguyen/Documents/datasets/template-pose-released/datasets/"
     transform_inverse = transforms.Compose(
         [
             transforms.Normalize(
@@ -468,35 +468,36 @@ if __name__ == "__main__":
     ]
     os.makedirs("./tmp", exist_ok=True)
     for idx_dataset in range(len(root_dirs)):
-        for obj_id in range(1, 31):
-            for mode in ["query", "template"]:
+        for obj_id in [21]:
+            for mode in ["query"]:
                 dataset = BOPDatasetTest(
                     root_dir=root_dirs[idx_dataset],
                     template_dir=os.path.join(root_dir, f"templates_pyrender/tless"),
                     split="test_primesense",
                     obj_id=obj_id,
                     img_size=256,
-                    reset_metaData=False,
-                    linemod_setting=False,
+                    reset_metaData=True,
+                    linemod_setting=True,
                     mode=mode,
                 )
 
-                train_data = DataLoader(
-                    dataset, batch_size=36, shuffle=True, num_workers=8
-                )
-                train_size, train_loader = len(train_data), iter(train_data)
-                logging.info(f"object {obj_id}, mode {mode}, length {train_size}")
-                for idx in tqdm(range(train_size)):
-                    batch = next(train_loader)
+                # train_data = DataLoader(
+                #     dataset, batch_size=36, shuffle=True, num_workers=8
+                # )
+                # train_size, train_loader = len(train_data), iter(train_data)
+                # logging.info(f"object {obj_id}, mode {mode}, length {train_size}")
+                for idx in tqdm(range(len(dataset))):
+                    # batch = next(train_loader)
                     save_image_path = os.path.join(
-                        f"./tmp/obj{obj_id}_{mode}_batch{idx}.png"
+                        f"./media/demo/tless_{obj_id:02d}/query_{idx}.png"
                     )
-                    rgb = batch[mode]
+                    sample = dataset[idx]
+                    rgb = sample["query"]
                     save_image(
                         transform_inverse(rgb),
                         save_image_path,
-                        nrow=6,
+                        nrow=1,
                     )
                     print(save_image_path)
-                    if idx == 2:
+                    if idx == 5:
                         break
