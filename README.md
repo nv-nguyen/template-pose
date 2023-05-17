@@ -2,7 +2,9 @@
 <h2>
 Templates for 3D Object Pose Estimation Revisited:<br>  Generalization to New objects and Robustness to Occlusions
 <p></p>
+</h2>
 
+<h3>
 <a href="https://nv-nguyen.github.io/" target="_blank"><nobr>Van Nguyen Nguyen</nobr></a> &emsp;
 <a href="https://yinlinhu.github.io/" target="_blank"><nobr>Yinlin Hu</nobr></a> &emsp;
 <a href="Yang Xiao" target="_blank"><nobr>Yang Xiao</nobr></a> &emsp;
@@ -23,7 +25,7 @@ src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" he
   <img src=./media/qualitative.gif width="80%"/>
 </p>
 
-</h2>
+</h3>
 </div>
 
 If our project is helpful for your research, please consider citing : 
