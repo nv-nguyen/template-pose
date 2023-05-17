@@ -7,7 +7,7 @@ Templates for 3D Object Pose Estimation Revisited:<br>  Generalization to New ob
 <h3>
 <a href="https://nv-nguyen.github.io/" target="_blank"><nobr>Van Nguyen Nguyen</nobr></a> &emsp;
 <a href="https://yinlinhu.github.io/" target="_blank"><nobr>Yinlin Hu</nobr></a> &emsp;
-<a href="Yang Xiao" target="_blank"><nobr>Yang Xiao</nobr></a> &emsp;
+<a href="https://youngxiao13.github.io/" target="_blank"><nobr>Yang Xiao</nobr></a> &emsp;
 <a href="https://people.epfl.ch/mathieu.salzmann" target="_blank"><nobr>Mathieu Salzmann</nobr></a> &emsp;
 <a href="https://vincentlepetit.github.io/" target="_blank"><nobr>Vincent Lepetit</nobr></a>
 
