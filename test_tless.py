@@ -50,7 +50,8 @@ def test(cfg: DictConfig):
         cfg.machine.trainer.devices = num_gpus
         cfg.machine.trainer.num_nodes = num_nodes
         logging.info(f"Slurm config: {num_gpus} gpus,  {num_nodes} nodes")
-    num_devices = cfg.machine.trainer.devices
+    #  num_devices = cfg.machine.trainer.devices
+    num_devices = 1
     cfg.machine.trainer.devices = [0]  # testing run only on single gpu
     trainer = instantiate(cfg.machine.trainer)
     logging.info(f"Trainer initialized")

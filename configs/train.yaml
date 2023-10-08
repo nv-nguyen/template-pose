@@ -16,9 +16,9 @@ use_random_scale_translation: True
 use_additional_negative_samples_for_training: False
 train_datasets:
   - tless_train
-  - hb 
-  - hope 
-  - icmi 
+  - hb
+  # - hope
+  - icmi
   - icbin
   - ruapc
   - tudl

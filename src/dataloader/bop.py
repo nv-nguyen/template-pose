@@ -454,7 +454,7 @@ if __name__ == "__main__":
     from src.dataloader.lm_utils import query_real_ids
     from torchvision.utils import make_grid, save_image
 
-    root_dir = "/home/nguyen/Documents/datasets/template-pose-released/datasets/"
+    root_dir = "./datasets"
     transform_inverse = transforms.Compose(
         [
             transforms.Normalize(

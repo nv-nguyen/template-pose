@@ -164,8 +164,8 @@ if __name__ == "__main__":
     from torchvision import utils
 
     logging.basicConfig(level=logging.INFO)
-    root_dir = "/home/nguyen/Documents/datasets/templateV2/lm/"
-    template_dir = "/home/nguyen/Documents/datasets/templateV2/templates/query"
+    root_dir = "./datasets/lm/"
+    template_dir = "./datasets/templates/query"
     reset_metaData = True
     split_metaData = get_list_id_obj_from_split_name("split1")
     transform_inverse = transforms.Compose(

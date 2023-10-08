@@ -11,7 +11,9 @@ def get_camera_positions(nSubDiv):
     * subdived
     """
 
-    bpy.ops.mesh.primitive_ico_sphere_add(location=(0, 0, 0), enter_editmode=True)
+    bpy.ops.mesh.primitive_ico_sphere_add(
+        location=(0, 0, 0), enter_editmode=True
+    )
     # bpy.ops.export_mesh.ply(filepath='./sphere.ply')
     icos = bpy.context.object
     me = icos.data
@@ -127,7 +129,7 @@ save_dir = "src/poses/predefined_poses"
 for level in [0, 2, 3]:
     position_icosphere = np.asarray(get_camera_positions(level)[1])
     cam_poses = convert_location_to_rotation(position_icosphere)
-    cam_poses[:, :3, 3] *= 1000.
+    cam_poses[:, :3, 3] *= 1000.0
     np.save(f"{save_dir}/cam_poses_level{level}.npy", cam_poses)
     obj_poses = inverse_transform(cam_poses)
     np.save(f"{save_dir}/obj_poses_level{level}.npy", obj_poses)

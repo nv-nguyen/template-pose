@@ -14,12 +14,18 @@ from functools import partial
 import time
 from tqdm import tqdm
 import numpy as np
+import wandb
 
 
 def conv1x1(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
     return nn.Conv2d(
-        in_planes, out_planes, kernel_size=1, stride=stride, padding=0, bias=False
+        in_planes,
+        out_planes,
+        kernel_size=1,
+        stride=stride,
+        padding=0,
+        bias=False,
     )
 
 
@@ -36,9 +42,9 @@ class InfoNCE(nn.Module):
         sim_extra: BxB use extra object as negative
         """
         b = neg_sim.shape[0]
-        logits = (1 - torch.eye(b)).type_as(neg_sim) * neg_sim + torch.eye(b).type_as(
-            pos_sim
-        ) * pos_sim
+        logits = (1 - torch.eye(b)).type_as(neg_sim) * neg_sim + torch.eye(
+            b
+        ).type_as(pos_sim) * pos_sim
 
         labels = torch.arange(b, dtype=torch.long, device=logits.device)
         if sim_extra_obj is not None:
@@ -92,12 +98,16 @@ class BaseFeatureExtractor(pl.LightningModule):
         projector = nn.Sequential(
             conv1x1(7, 256), nn.ReLU(), conv1x1(256, descriptor_size)
         )
-        self.backbone = nn.Sequential(layer1, nn.ReLU(), layer2, nn.ReLU(), projector)
+        self.backbone = nn.Sequential(
+            layer1, nn.ReLU(), layer2, nn.ReLU(), projector
+        )
 
         # define optimizer
         self.weight_decay = float(kwargs["weight_decay"])
         self.lr = float(kwargs["lr"])
-        self.use_all_gather = kwargs["use_all_gather"]  # multi-gpu contrast learning
+        self.use_all_gather = kwargs[
+            "use_all_gather"
+        ]  # multi-gpu contrast learning
         self.warm_up_steps = kwargs["warm_up_steps"]
 
         self.log_interval = kwargs["log_interval"]
@@ -119,9 +129,13 @@ class BaseFeatureExtractor(pl.LightningModule):
     def warm_up_lr(self):
         for optim in self.trainer.optimizers:
             for pg in optim.param_groups:
-                pg["lr"] = self.global_step / float(self.warm_up_steps) * self.lr
+                pg["lr"] = (
+                    self.global_step / float(self.warm_up_steps) * self.lr
+                )
             if self.global_step % 50 == 0:
-                logging.info(f"Step={self.global_step}, lr warm up: lr={pg['lr']}")
+                logging.info(
+                    f"Step={self.global_step}, lr warm up: lr={pg['lr']}"
+                )
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
@@ -138,7 +152,9 @@ class BaseFeatureExtractor(pl.LightningModule):
         feat = self.backbone(x)
         return feat
 
-    def calculate_similarity(self, feat_query, feat_template, mask, training=True):
+    def calculate_similarity(
+        self, feat_query, feat_template, mask, training=True
+    ):
         """
         Calculate similarity for each batch
         input:
@@ -168,7 +184,8 @@ class BaseFeatureExtractor(pl.LightningModule):
                 feat_query * mask_template, feat_template * mask_template
             )
             similarity = (
-                self.occlusion_sim(similarity).sum(axis=2).sum(axis=1) / num_non_zero
+                self.occlusion_sim(similarity).sum(axis=2).sum(axis=1)
+                / num_non_zero
             )
         return similarity
 
@@ -182,7 +199,11 @@ class BaseFeatureExtractor(pl.LightningModule):
         feat_template: NxCxHxW
         output: similarity BxN
         """
-        B, N, C = feat_query.size(0), feat_templates.size(0), feat_query.size(1)
+        B, N, C = (
+            feat_query.size(0),
+            feat_templates.size(0),
+            feat_query.size(1),
+        )
         similarity = torch.zeros((B, N)).type_as(feat_query)
         assert torch.isnan(similarity).any() == False
         for i in range(B):
@@ -214,7 +235,9 @@ class BaseFeatureExtractor(pl.LightningModule):
         template = batch["template"]
         mask_vis = batch["template_mask"].float()
         mask_vis = mask_vis.repeat(1, 3, 1, 1)
-        mask_vis = F.interpolate(mask_vis, size=query.shape[2:], mode="nearest")
+        mask_vis = F.interpolate(
+            mask_vis, size=query.shape[2:], mode="nearest"
+        )
         vis_img, _ = put_image_to_grid(
             [
                 self.transform_inverse(query),
@@ -250,7 +273,10 @@ class BaseFeatureExtractor(pl.LightningModule):
                 )
                 # concat
                 batch[dataset_name]["query"] = torch.cat(
-                    (batch[dataset_name]["query"], batch[dataset_name]["neg_query"])
+                    (
+                        batch[dataset_name]["query"],
+                        batch[dataset_name]["neg_query"],
+                    )
                 )[index]
                 batch[dataset_name]["template"] = torch.cat(
                     (
@@ -276,8 +302,13 @@ class BaseFeatureExtractor(pl.LightningModule):
             feature_template.append(feature_template_i)
             mask.append(mask_i)
 
-            if self.global_step % self.log_interval == 0 and self.global_rank == 0:
-                self.visualize_batch(batch[dataset_name], f"train_{dataset_name}")
+            if (
+                self.global_step % self.log_interval == 0
+                and self.global_rank == 0
+            ):
+                self.visualize_batch(
+                    batch[dataset_name], f"train_{dataset_name}"
+                )
         # collect from all datasets
         feature_query = torch.cat(feature_query, dim=0)
         feature_template = torch.cat(feature_template, dim=0)
@@ -286,12 +317,16 @@ class BaseFeatureExtractor(pl.LightningModule):
         # collect data from all devices
         if self.use_all_gather:
             feature_query = self.all_gather(feature_query, sync_grads=True)
-            feature_template = self.all_gather(feature_template, sync_grads=True)
+            feature_template = self.all_gather(
+                feature_template, sync_grads=True
+            )
             mask = self.all_gather(mask, sync_grads=True)
 
             # reshape data from (num_devices, B, C, H, W) to (num_devices*B, C, H, W)
             feature_query = feature_query.reshape(-1, *feature_query.shape[2:])
-            feature_template = feature_template.reshape(-1, *feature_template.shape[2:])
+            feature_template = feature_template.reshape(
+                -1, *feature_template.shape[2:]
+            )
             mask = mask.reshape(-1, *mask.shape[2:])
 
         positive_similarity = self.calculate_similarity(
@@ -301,7 +336,8 @@ class BaseFeatureExtractor(pl.LightningModule):
             feature_query, feature_template, mask
         )  # B x B
         avg_pos_sim, avg_neg_sim, loss = self.calculate_global_loss(
-            positive_pair=positive_similarity, negative_pair=negative_similarity
+            positive_pair=positive_similarity,
+            negative_pair=negative_similarity,
         )
         self.log(
             "loss_InfoNCE",
@@ -341,16 +377,22 @@ class BaseFeatureExtractor(pl.LightningModule):
             feature_template = self.forward(templates[idx, :])
             mask = template_masks[idx, :]
             matrix_sim = self.calculate_similarity_for_search(
-                feature_query[idx].unsqueeze(0), feature_template, mask, training=False
+                feature_query[idx].unsqueeze(0),
+                feature_template,
+                mask,
+                training=False,
             )
             weight_sim, pred_index = matrix_sim.topk(k=k)
             pred_indexes[idx] = pred_index.reshape(-1)
 
         retrieved_template = templates[
-            torch.arange(0, batch_size, device=query.device), pred_indexes[:, 0]
+            torch.arange(0, batch_size, device=query.device),
+            pred_indexes[:, 0],
         ]
         retrieved_poses = template_poses[
-            torch.arange(0, batch_size, device=query.device).unsqueeze(1).repeat(1, k),
+            torch.arange(0, batch_size, device=query.device)
+            .unsqueeze(1)
+            .repeat(1, k),
             pred_indexes,
         ]
         # visualize prediction
@@ -443,7 +485,9 @@ class BaseFeatureExtractor(pl.LightningModule):
         data["intrinsic"] = intrinsic.cpu().numpy()
         data["depth_path"] = depth_path
 
-        pred_poses = torch.zeros((predR.shape[0], 1, 4, 4), device=predR.device)
+        pred_poses = torch.zeros(
+            (predR.shape[0], 1, 4, 4), device=predR.device
+        )
         pred_poses[:, :, 3, 3] = 1
         pred_poses[:, 0, :3, :3] = predR
         # it requries pred_bbox to calculate predicted translation, otherwise using GT translation
@@ -455,7 +499,11 @@ class BaseFeatureExtractor(pl.LightningModule):
 
         gt_poses = torch.cat((gtR, query_translation.unsqueeze(2)), dim=2)
         gt_poses = torch.cat(
-            (gt_poses, torch.zeros((predR.shape[0], 1, 4), device=predR.device)), dim=1
+            (
+                gt_poses,
+                torch.zeros((predR.shape[0], 1, 4), device=predR.device),
+            ),
+            dim=1,
         )
         gt_poses[:, 3, 3] = 1.0
         data["query_pose"] = gt_poses.cpu().numpy()
@@ -466,11 +514,15 @@ class BaseFeatureExtractor(pl.LightningModule):
         start_time = time.time()
         vsd_error = list(
             tqdm(
-                pool.imap_unordered(vsd_obj_from_index, range(len(data["query_pose"]))),
+                pool.imap_unordered(
+                    vsd_obj_from_index, range(len(data["query_pose"]))
+                ),
                 total=len(data["query_pose"]),
             )
         )
-        vsd_error = np.stack(vsd_error, axis=0)  # Bxk where k is top k retrieved
+        vsd_error = np.stack(
+            vsd_error, axis=0
+        )  # Bxk where k is top k retrieved
         np.save(save_path, vsd_error)
         finish_time = time.time()
         logging.info(
@@ -483,7 +535,9 @@ class BaseFeatureExtractor(pl.LightningModule):
             for threshold in [0.15, 0.3, 0.45]:
                 vsd_acc = (best_vsd <= threshold) * 100.0
                 # same for median
-                final_scores[f"top {k}, vsd_scores {threshold}"] = np.mean(vsd_acc)
+                final_scores[f"top {k}, vsd_scores {threshold}"] = np.mean(
+                    vsd_acc
+                )
         return final_scores
 
     def test_epoch_end(self, test_step_outputs):
@@ -501,7 +555,12 @@ class BaseFeatureExtractor(pl.LightningModule):
                         data[name] = []
                     data[name].append(test_step_outputs[idx_batch][name])
         # concat template
-        for name in ["template", "feature_template", "template_pose", "template_mask"]:
+        for name in [
+            "template",
+            "feature_template",
+            "template_pose",
+            "template_mask",
+        ]:
             data[name] = torch.cat(data[name], dim=0)
 
         # find nearest neighbors
@@ -531,9 +590,13 @@ class BaseFeatureExtractor(pl.LightningModule):
                         ).long()
                         * self.obj_symmetry,
                     )
-                    np.save(os.path.join(
-                            self.log_dir, f"geodesic_obj_{self.obj_id}_batch{idx_batch}.npy"
-                        ), error.cpu().numpy())
+                    np.save(
+                        os.path.join(
+                            self.log_dir,
+                            f"geodesic_obj_{self.obj_id}_batch{idx_batch}.npy",
+                        ),
+                        error.cpu().numpy(),
+                    )
                 elif self.metric_eval == "vsd":
                     acc = self.get_vsd(
                         predR=pred_pose,
@@ -544,7 +607,8 @@ class BaseFeatureExtractor(pl.LightningModule):
                         intrinsic=test_step_outputs[idx_batch]["intrinsic"],
                         depth_path=test_step_outputs[idx_batch]["depth_path"],
                         save_path=os.path.join(
-                            self.log_dir, f"vsd_obj_{self.obj_id}_batch{idx_batch}.npy"
+                            self.log_dir,
+                            f"vsd_obj_{self.obj_id}_batch{idx_batch}.npy",
                         ),
                     )
                 self.monitoring_score(

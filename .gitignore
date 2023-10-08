@@ -1,5 +1,8 @@
 # Additional 
 pytorch3d/
+datasets/
+results/
+pretrained/
 configs/user/nguyen.yaml
 sync_wandb.sh
 .hydra/

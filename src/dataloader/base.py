@@ -339,7 +339,7 @@ class BaseBOP(Dataset):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    root_dir = "/gpfsscratch/rech/xjd/uyb58rn/datasets/template-pose"
+    root_dir = "./datasets"
     dataset_names = ["hb", "hope", "icbin", "lm", "o-lm", "ruapc", "tudl"]
     # tless is special
     for dataset_name, split in zip(
