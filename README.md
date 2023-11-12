@@ -190,7 +190,7 @@ Please note that all testing objects are unseen during training!
 
 <details><summary>Click to expand</summary>
 
-### 0. You can download it from [here]() or run:
+### 0. You can download it from [this link](https://drive.google.com/drive/folders/11SQYPrG3pX31Qszf8R13s7Aaa5MO57lb?usp=sharing) or run:
 
 ```
 python -m src.scripts.download_checkpoint
@@ -214,12 +214,6 @@ Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose
 
 </details>
 
-##  Inference on custom objects (WIP)
-
-```
-python gradio_demo.py
-```
-![Demo](./media/gradio_interface.png)
 
 ## Acknowledgement
 
