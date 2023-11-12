@@ -39,6 +39,7 @@ If our project is helpful for your research, please consider citing :
 You can also put a star :star:, if the code is useful to you.
 
 If you like this project, check out related works from our group:
+- [CNOS: A Strong Baseline for CAD-based Novel Object Segmentation (ICCV 2023 R6D)](https://github.com/nv-nguyen/cnos) 
 - [NOPE: Novel Object Pose Estimation from a Single Image (arXiv 2023)](https://github.com/nv-nguyen/nope) 
 - [PIZZA: A Powerful Image-only Zero-Shot Zero-CAD Approach to 6DoF Tracking
 (3DV 2022)](https://github.com/nv-nguyen/pizza)
