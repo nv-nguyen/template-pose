@@ -53,6 +53,7 @@ If our project is helpful for your research, please consider citing :
 You can also put a star :star:, if the code is useful to you.
 
 If you like this project, check out related works from our group:
+- [CNOS: A Strong Baseline for CAD-based Novel Object Segmentation (ICCV 2023 R6D)](https://github.com/nv-nguyen/cnos) 
 - [NOPE: Novel Object Pose Estimation from a Single Image (arXiv 2023)](https://github.com/nv-nguyen/nope) 
 - [PIZZA: A Powerful Image-only Zero-Shot Zero-CAD Approach to 6DoF Tracking
 (3DV 2022)](https://github.com/nv-nguyen/pizza)
@@ -201,7 +202,7 @@ Please note that all testing objects are unseen during training!
 
 <details><summary>Click to expand</summary>
 
-### 0. You can download it from [here]() or run:
+### 0. You can download it from [this link](https://drive.google.com/drive/folders/11SQYPrG3pX31Qszf8R13s7Aaa5MO57lb?usp=sharing) or run:
 
 ```
 python -m src.scripts.download_checkpoint
@@ -224,6 +225,7 @@ python test_tless.py name_exp=test_tless model.checkpoint_path=$CHECKPOINT_PATH
 Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose-released/reports/Visualizations-of-template-pose--Vmlldzo0MzY0NDI2?accessToken=hyet783s3ujnbtvmqda71q2nv8haira63f5n23c3fhorb1oe949qmehucplaxfd8) to see how the retrieved results looks like.
 
 </details>
+
 
 ## Acknowledgement
 
