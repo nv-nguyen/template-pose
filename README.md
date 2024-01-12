@@ -21,12 +21,26 @@ src="https://img.shields.io/badge/-Paper-blue.svg?colorA=333&logo=arxiv" height=
 src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" height=35em></a>
 <p></p>
 
+<h2>
+Checkout our new work GigaPose which supports more features:<br>
+
+<a href="https://github.com/nv-nguyen/gigapose" target="_blank"><nobr>https://github.com/nv-nguyen/gigapose</nobr></a>
+
+<p></p>
+</h2>
+
 <p align="center">
   <img src=./media/qualitative.gif width="80%"/>
 </p>
 
 </h3>
 </div>
+
+
+#### In case of any issue, you can checkout to the commit where the code is working smoothly:
+```
+git checkout 50a1087
+```
 
 If our project is helpful for your research, please consider citing : 
 ``` Bash
@@ -46,7 +60,7 @@ If you like this project, check out related works from our group:
 
 ![Teaser image](./media/method.png)
 
-##  Updates (WIP)
+##  Updates
 We have introduced additional features and updates to the codebase:
 - Adding wandb logger: [training loggers](https://api.wandb.ai/links/nv-nguyen/8hkk35s4), [testing loggers](https://wandb.ai/nv-nguyen/template-pose-released/reports/Visualizations-of-template-pose--Vmlldzo0MzY0NDI2?accessToken=hyet783s3ujnbtvmqda71q2nv8haira63f5n23c3fhorb1oe949qmehucplaxfd8)
 - Cropping in LINEMOD settings is done with input bounding boxes (there is also predicted in-plane rotation)
@@ -77,11 +91,8 @@ $ROOT_DIR
 ```
 
 </details>
-If you don't want these features, you can use the last version of codebase with the following command:
 
-```
-git checkout 50a1087
-```
+
 
 This repository is running with the Weight and Bias logger. Ensure that you update this [user's configuration](https://github.com/nv-nguyen/template-pose/blob/main/configs/user/default.yaml) before conducting any experiments. 
 
@@ -214,13 +225,6 @@ Please check out this [testing loggers](https://wandb.ai/nv-nguyen/template-pose
 
 </details>
 
-##  Inference on custom objects (WIP)
-
-```
-python gradio_demo.py
-```
-![Demo](./media/gradio_interface.png)
-
 ## Acknowledgement
 
 The code is adapted from [Nope](https://github.com/nv-nguyen/nope), [Temos](https://github.com/Mathux/Temos), [Unicorn](https://github.com/monniert/unicorn), [PoseContrast](https://github.com/YoungXIAO13/PoseContrast), [CosyPose](https://github.com/ylabbe/cosypose) and [BOP Toolkit](https://github.com/thodan/bop_toolkit). 
@@ -229,9 +233,3 @@ The authors thank Martin Sundermeyer, Paul Wohlhart and Shreyas Hampali for thei
 
 ## Contact
 If you have any question, feel free to create an issue or contact the first author at van-nguyen.nguyen@enpc.fr
-
-##  TODO
-- Update checkpoints
-- Tutorial of training/testing on custom datasets
-- Gradio demo with similarity visualization
-- Release universal pretrained models
