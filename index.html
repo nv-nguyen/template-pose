@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+    content="Templates for 3D Object Pose Estimation Revisited: Generalization to New Objects and Robustness to Occlusions.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Templates for 3D Object Pose Estimation Revisited: Generalization to New Objects and Robustness to Occlusions
+  </title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="../static/css/bulma.min.css">
+  <link rel="stylesheet" href="../static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="../static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="../static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="../static/css/index.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="../static/js/fontawesome.all.min.js"></script>
+  <script src="../static/js/bulma-carousel.min.js"></script>
+  <script src="../static/js/bulma-slider.min.js"></script>
+  <script src="../static/js/index.js"></script>
+</head>
+
+<body>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-3 publication-title">Templates for 3D Object Pose Estimation Revisited: <br>
+              Generalization to New Objects and Robustness to Occlusions</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://nv-nguyen.github.io/">Van Nguyen Nguyen</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://yinlinhu.github.io/">Yinlin Hu</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="https://youngxiao13.github.io/">Yang Xiao</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://people.epfl.ch/mathieu.salzmann"> Mathieu Salzmann</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="https://vincentlepetit.github.io/">Vincent Lepetit</a><sup>1</sup>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>LIGM, Ecole des Ponts,</span>
+              <span class="author-block"><sup>2</sup>EPFL</span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2203.17234" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="https://github.com/nv-nguyen/template-pose"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-five-fifths">
+          <h2 class="title is-3">Overview</h2>
+          <div class="content has-text-justified">
+            <image src="images/teaser.png" width="1280" class="img-responsive" alt="overview"><br>
+              <p class="text-justify">
+                <strong>TL;DR:</strong> We use contrastive learning to compute local features, from which the similarity
+                between a real image and a synthetic template can be predicted. We also introduce a new similarity
+                measure that explicitly takes into account the object’s mask in the template and the possible occlusions
+                in the query image. We show experimentally that our method, based on local feature, has much better
+                properties and can be made robust to occlusions.
+              </p>
+          </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-five-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              We present a method that can recognize new objects and estimate their 3D pose in RGB images even under
+              partial occlusions. Our method requires neither a training phase on these objects nor real images
+              depicting them, only their CAD models. It relies on a small set of training objects to learn local object
+              representations, which allow us to locally match the input image to a set of “templates”, rendered images
+              of the CAD models for the new objects. In contrast with the state-of-the-art methods, the new objects on
+              which our method is applied can be very different from the training objects. As a result, we are the first
+              to show generalization without retraining on the LINEMOD and Occlusion-LINEMOD datasets. Our analysis of
+              the failure modes of previous template-based approaches further confirms the benefits of local features
+              for template matching. We outperform the state-of-the-art template matching methods on the LINEMOD,
+              Occlusion-LINEMOD and T-LESS datasets.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-five-fifths">
+          <h2 class="title is-3">Qualitative results</h2>
+          <div class="content has-text-justified">
+            <image src="images/results.png" width="1280" class="img-responsive" alt="qualitative"><br>
+              <p class="text-justify">
+                <strong>Qualitative results on LM-O (left) and T-LESS (right) datasets.</strong> The first column shows
+                the input testing images. The second column shows the ground truth poses. The two last column shows the
+                results of our method.
+              </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@inproceedings{nguyen2022templates,
+        title     = {Templates for 3D Object Pose Estimation Revisited: Generalization to New Objects and Robustness to Occlusions},
+        author    = {Nguyen, Van Nguyen and Hu, Yinlin and Xiao, Yang and Salzmann, Mathieu and Lepetit, Vincent},
+        booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+        pages     = {6771--6780},
+        year      = {2022}
+      }</code></pre>
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">Further information</h2>
+      If you like this project, check out our works on novel object segmentation / pose estimation:
+      <ul>
+        <li><a href="https://nv-nguyen.github.io/gigaPose/"> GigaPose: Fast and Robust Novel Object Pose Estimation via
+            One Correspondence (arXiv 2023)</a></li>
+        <li><a href="https://nv-nguyen.github.io/cnos/"> CNOS: A Strong Baseline for CAD-based Novel Object Segmentation
+            (ICCV 2023 R6D) </a></li>
+        <li><a href="https://github.com/nv-nguyen/pizza"> PIZZA: A Powerful Image-only Zero-Shot Zero-CAD Approach to
+            6DoF Tracking (3DV 2022) </a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This website is taken from <a href="https://github.com/nerfies/nerfies.github.io">here</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
